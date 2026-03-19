@@ -8,21 +8,31 @@ import { usePartnerContext } from '../contexts/PartnerContext';
 
 export function MaterialMetrics() {
   const intl = useIntl();
-  const { selectedPartner, availablePartners, selectedRegion } = usePartnerContext();
+  const { selectedPartner, availablePartners, selectedRegion, isOPCO, userRegion } = usePartnerContext();
   const [materials, setMaterials] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchMaterials = async () => {
-      if (materials.length === 0) setLoading(true);
+      // Always show loading when params change to avoid stale data
+      setLoading(true);
 
       try {
-        const user = authService.getCurrentUser();
-        const params = {
-          partnerKey: selectedPartner?.id,
-          region: selectedRegion || user?.region,
+        const isGlobal = isOPCO && selectedRegion === null;
+        const params: any = {
           availablePartnerIds: availablePartners.map(p => p.id)
         };
+
+        if (selectedPartner?.id) {
+          params.partnerKey = selectedPartner.id;
+        } else if (isGlobal) {
+          params.global = true;
+          // In global view, don't restrict by current partner IDs as they might still be loading
+          delete params.availablePartnerIds;
+        } else {
+          params.region = selectedRegion || userRegion;
+        }
+
         const data = await dashboardService.getMaterialMetrics(params);
         setMaterials(data || []);
       } catch (error) {
@@ -33,7 +43,7 @@ export function MaterialMetrics() {
     };
 
     fetchMaterials();
-  }, [selectedPartner, availablePartners, selectedRegion]);
+  }, [selectedPartner, availablePartners, selectedRegion, isOPCO, userRegion]);
 
   const minimumGridSpaces = 5;
   const placeholdersCount = Math.max(0, minimumGridSpaces - materials.length);

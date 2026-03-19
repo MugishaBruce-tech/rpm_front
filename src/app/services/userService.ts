@@ -6,7 +6,7 @@ export const userService = {
     return data.result;
   },
 
-  getUsers: async (params?: { page?: number; limit?: number; search?: string; region?: string; type?: string; status?: string }) => {
+  getUsers: async (params?: { page?: number; limit?: number; search?: string; region?: string; type?: string; status?: string; is_internal?: boolean }) => {
     const queryParams = new URLSearchParams();
     if (params?.page) queryParams.append('page', params.page.toString());
     if (params?.limit) queryParams.append('limit', params.limit.toString());
@@ -14,6 +14,7 @@ export const userService = {
     if (params?.region) queryParams.append('region', params.region);
     if (params?.type) queryParams.append('type', params.type);
     if (params?.status) queryParams.append('status', params.status);
+    if (params?.is_internal !== undefined) queryParams.append('is_internal', params.is_internal.toString());
 
     const url = `/user/list?${queryParams.toString()}`;
     const data = await apiRequest(url);
@@ -28,16 +29,16 @@ export const userService = {
     return data.result;
   },
 
-  updateUser: async (userId: string, userData: any) => {
-    const data = await apiRequest(`/user/${userId}`, {
+  updateUser: async (userId: string, userData: any, is_internal: boolean = false) => {
+    const data = await apiRequest(`/user/${userId}?is_internal=${is_internal}`, {
       method: 'PUT',
       body: JSON.stringify(userData),
     });
     return data.result;
   },
 
-  deleteUser: async (userId: string) => {
-    const data = await apiRequest(`/user/${userId}`, {
+  deleteUser: async (userId: string, is_internal: boolean = false) => {
+    const data = await apiRequest(`/user/${userId}?is_internal=${is_internal}`, {
       method: 'DELETE',
     });
     return data.result;
@@ -45,6 +46,14 @@ export const userService = {
 
   getUserLogs: async (userId: string) => {
     const data = await apiRequest(`/user/${userId}/logs`);
+    return data.result;
+  },
+  
+  resetPassword: async (userId: string, newPassword: string, is_internal: boolean = false) => {
+    const data = await apiRequest(`/user/${userId}/reset-password?is_internal=${is_internal}`, {
+      method: 'PUT',
+      body: JSON.stringify({ newPassword }),
+    });
     return data.result;
   },
 };

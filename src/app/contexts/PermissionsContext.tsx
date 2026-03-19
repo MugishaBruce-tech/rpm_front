@@ -1,7 +1,7 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { authService } from '../services/authService';
 
-export type PermissionAction = 
+export type PermissionAction =
   | 'DASHBOARD_GLOBAL_VIEW'
   | 'DASHBOARD_REGIONAL_VIEW'
   | 'DASHBOARD_SELF_VIEW'
@@ -24,6 +24,7 @@ export type PermissionAction =
   | 'LOAN_MANAGE_ALL'
   | 'LOAN_MANAGE_REGION'
   | 'SETTINGS_MANAGE'
+  | 'AUDIT_VIEW'
   | 'MANAGE_REGION_USERS' // Legacy
   | 'MANAGE_ROLES' // Legacy
   | 'APPROVE_LOANS'; // Legacy
@@ -39,7 +40,7 @@ const PermissionsContext = createContext<PermissionsContextType>({
   permissions: [],
   hasPermission: () => false,
   isLoading: true,
-  refreshPermissions: async () => {},
+  refreshPermissions: async () => { },
 });
 
 export const PermissionsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -49,7 +50,7 @@ export const PermissionsProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const loadPermissions = async () => {
     setIsLoading(true);
     const user = authService.getCurrentUser();
-    
+
     // Check localStorage first
     if (user && user.permissions) {
       setPermissions(user.permissions);
@@ -75,20 +76,20 @@ export const PermissionsProvider: React.FC<{ children: React.ReactNode }> = ({ c
     loadPermissions();
   }, []);
 
-  const hasPermission = (action: PermissionAction) => {
+  const hasPermission = useCallback((action: PermissionAction) => {
     if (!action) return true;
-    
+
     // 1. Exact match
     if (permissions.includes(action)) return true;
 
     // 2. Hierarchy Logic (e.g. USER_CREATE_ALL implies USER_CREATE_REGION)
     const actionStr = action.toString();
     if (actionStr.endsWith('_REGION') || actionStr.endsWith('_SELF')) {
-       const base = actionStr.replace(/_REGION$|_SELF$/, '');
-       if (permissions.includes(`${base}_ALL` as PermissionAction)) return true;
-       
-       if (actionStr.endsWith('_SELF') && permissions.includes(`${base}_REGIONAL` as PermissionAction)) return true;
-       if (actionStr.endsWith('_SELF') && permissions.includes(`${base}_REGION` as PermissionAction)) return true;
+      const base = actionStr.replace(/_REGION$|_SELF$/, '');
+      if (permissions.includes(`${base}_ALL` as PermissionAction)) return true;
+
+      if (actionStr.endsWith('_SELF') && permissions.includes(`${base}_REGIONAL` as PermissionAction)) return true;
+      if (actionStr.endsWith('_SELF') && permissions.includes(`${base}_REGION` as PermissionAction)) return true;
     }
 
     // 3. Admin escape hatch: if user has USER_EDIT_ALL, they can generally see manage buttons
@@ -97,7 +98,7 @@ export const PermissionsProvider: React.FC<{ children: React.ReactNode }> = ({ c
     if (actionStr.startsWith('LOAN_') && permissions.includes('LOAN_MANAGE_ALL')) return true;
 
     return false;
-  };
+  }, [permissions]);
 
   return (
     <PermissionsContext.Provider value={{ permissions, hasPermission, isLoading, refreshPermissions: loadPermissions }}>

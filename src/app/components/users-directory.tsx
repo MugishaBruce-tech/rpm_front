@@ -43,7 +43,7 @@ export function UsersDirectory({ targetRoute, title, icon: Icon }: { targetRoute
   );
 
   return (
-    <div className="p-4 md:p-6 w-full max-w-4xl mx-auto space-y-6">
+    <div className="p-4 md:p-6 w-full max-w-4xl mx-auto space-y-6 min-h-[calc(100vh-120px)] flex flex-col">
       <Card className="overflow-hidden shadow-sm">
         <CardHeader className="space-y-4 pb-4 border-b border-slate-100">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -118,9 +118,21 @@ export function UsersDirectory({ targetRoute, title, icon: Icon }: { targetRoute
                       <h4 className="text-sm font-semibold text-slate-900 group-hover:text-emerald-700 transition-colors">
                         {partner.name}
                       </h4>
-                      <p className="text-xs text-slate-500 mt-0.5 uppercase tracking-wide">
-                        {partner.region || intl.formatMessage({ id: 'directory.no_region' })} {partner.role && `• ${partner.role}`}
-                      </p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-slate-50 px-1.5 py-0.5 rounded">
+                          {partner.region || intl.formatMessage({ id: 'directory.no_region' })}
+                        </span>
+                        {partner.role && (
+                          <span className={`text-[9px] font-black uppercase tracking-tighter px-1.5 py-0.5 rounded border ${
+                            partner.role.includes('OPCO') ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
+                            partner.role.includes('DDM') ? 'bg-indigo-50 text-indigo-600 border-indigo-100' :
+                            partner.role.includes('ADMIN') ? 'bg-rose-50 text-rose-600 border-rose-100' :
+                            'bg-blue-50 text-blue-600 border-blue-100'
+                          }`}>
+                            {partner.role}
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
                   <ChevronRight className="w-5 h-5 text-slate-300 group-hover:text-emerald-500 transition-colors" />
@@ -130,6 +142,10 @@ export function UsersDirectory({ targetRoute, title, icon: Icon }: { targetRoute
           )}
         </CardContent>
       </Card>
+      {/* FOOTER */}
+      <div className="flex justify-center items-center text-[7px] font-bold text-slate-400 uppercase tracking-[0.2em] px-1 mt-auto pt-10 opacity-40">
+        <span>{intl.formatMessage({ id: 'opco.copyright' })}</span>
+      </div>
     </div>
   );
 }

@@ -97,9 +97,10 @@ export const dashboardService = {
         const key = String(material.material_key || material.materialKey);
         const value = inventoryMap[key] || 0;
         return {
-          code: material.material_description || material.global_material_id || `MAT${key}`,
+          code: material.material_name2 || material.material_description || material.global_material_id || `MAT${key}`,
           materialKey: Number(key),
-          description: material.global_material_id || `Material ${key}`,
+          description: material.material_description || `Material ${key}`,
+          sku: material.global_material_id || '',
           value,
           trend: 0,
           color: colors[index % colors.length]
@@ -402,6 +403,39 @@ export const dashboardService = {
       return data.result || [];
     } catch (error) {
       console.error('Failed to fetch regions:', error);
+      return [];
+    }
+  },
+
+  async getInactiveUsers(region?: string): Promise<any> {
+    try {
+      const searchParams = new URLSearchParams();
+      if (region) searchParams.append('region', region);
+      
+      const data = await apiRequest(`/user/inactive/24h${searchParams.toString() ? '?' + searchParams.toString() : ''}`);
+      return data.result || { users: [], total: 0, byRegion: {} };
+    } catch (error) {
+      console.error('Failed to fetch inactive users:', error);
+      return { users: [], total: 0, byRegion: {} };
+    }
+  },
+
+  async getUsersByRegion(): Promise<any[]> {
+    try {
+      const response = await apiRequest('/dashboard/users-by-region');
+      return response.result || [];
+    } catch (error) {
+      console.error('Failed to fetch users by region:', error);
+      return [];
+    }
+  },
+
+  async getUsersByChannel(): Promise<any[]> {
+    try {
+      const response = await apiRequest('/dashboard/users-by-channel');
+      return response.result || [];
+    } catch (error) {
+      console.error('Failed to fetch users by channel:', error);
       return [];
     }
   }

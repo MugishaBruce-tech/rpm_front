@@ -12,6 +12,10 @@ import { AuthGuard } from "./components/auth-guard";
 import { PermissionsManager } from "./components/permissions/PermissionsManager";
 import { UsersStockDirectory, UsersLoansDirectory } from "./components/users-directory";
 import { OPCORegionalInventory, OPCORegionalLoans, OPCOUserDirectory } from "./components/OPCOView";
+import AuditLogs from "./components/audit-logs";
+
+import { BusinessPartnerList } from "./components/business-partner-list";
+import { BrarudiUserList } from "./components/brarudi-user-list";
 
 export const router = createBrowserRouter([
   {
@@ -29,6 +33,8 @@ export const router = createBrowserRouter([
           { index: true, Component: Dashboard },
           { path: "stock-management", Component: StockManagement },
           { path: "loans", Component: Loans },
+          { path: "admin/business-partners", Component: BusinessPartnerList },
+          { path: "admin/brarudi-users", Component: BrarudiUserList },
           { path: "settings/users", Component: UserList },
           { path: "settings/users/:id/edit", Component: UserEdit },
           { path: "settings/appearance", Component: ColorSettings },
@@ -39,6 +45,7 @@ export const router = createBrowserRouter([
           { path: "opco/regional-inventory", Component: OPCORegionalInventory },
           { path: "opco/regional-loans", Component: OPCORegionalLoans },
           { path: "opco/users", Component: OPCOUserDirectory },
+          { path: "admin/audit-logs", Component: AuditLogs },
         ],
       },
     ],

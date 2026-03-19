@@ -14,14 +14,17 @@ export const authService = {
       const permissions = data.result.profil?.permissions?.map((p: any) => p.code) || [];
       
       const mappedUser = {
-        id: data.result.business_partner_key.toString(),
-        name: data.result.business_partner_name,
+        id: (data.result.id || data.result.business_partner_key).toString(),
+        name: data.result.name || data.result.business_partner_name,
+        email: data.result.email || data.result.user_ad,
         region: data.result.region,
         role: data.result.profil?.CODE_PROFIL || data.result.business_partner_type,
-        permissions: permissions
+        permissions: permissions,
+        is_internal: data.result.is_internal || false
       };
       
       localStorage.setItem('rpm-tracker-auth-user', JSON.stringify(mappedUser));
+
       return mappedUser;
     }
     
@@ -42,14 +45,17 @@ export const authService = {
       const permissions = data.result.profil?.permissions?.map((p: any) => p.code) || [];
       
       const mappedUser = {
-        id: data.result.business_partner_key.toString(),
-        name: data.result.business_partner_name,
+        id: (data.result.id || data.result.business_partner_key).toString(),
+        name: data.result.name || data.result.business_partner_name,
+        email: data.result.email || data.result.user_ad,
         region: data.result.region,
         role: data.result.profil?.CODE_PROFIL || data.result.business_partner_type,
-        permissions: permissions
+        permissions: permissions,
+        is_internal: data.result.is_internal || false
       };
       
       localStorage.setItem('rpm-tracker-auth-user', JSON.stringify(mappedUser));
+
       return mappedUser;
     }
     return null;

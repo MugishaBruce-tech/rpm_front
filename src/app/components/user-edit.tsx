@@ -20,6 +20,7 @@ export function UserEdit() {
   const [legalEntities, setLegalEntities] = useState<any[]>([]);
   const [regions, setRegions] = useState<string[]>([]);
   const [businessPartnerTypes, setBusinessPartnerTypes] = useState<string[]>([]);
+  const [customerChannels, setCustomerChannels] = useState<string[]>([]);
   const [statuses, setStatuses] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
@@ -31,10 +32,11 @@ export function UserEdit() {
     user_ad: '',
     region: 'North',
     business_partner_type: 'customer',
-    customer_channel: 'distributor',
+    customer_channel: '',
     legal_entity_key: '',
     profil_id: '',
     business_partner_status: 'active',
+    is_internal: false
   });
 
   useEffect(() => {
@@ -50,10 +52,11 @@ export function UserEdit() {
         setLegalEntities(metadata.legalEntities || []);
         setRegions(metadata.regions || []);
         setBusinessPartnerTypes(metadata.businessPartnerTypes || []);
+        setCustomerChannels(metadata.customerChannels || []);
         setStatuses(metadata.statuses || []);
 
         if (id) {
-          const user = usersResponse.users.find((u: any) => u.business_partner_key === parseInt(id));
+          const user = usersResponse.users.find((u: any) => u.business_partner_key.toString() === id);
           if (user) {
             setFormData({
               business_partner_name: user.business_partner_name,
@@ -64,6 +67,7 @@ export function UserEdit() {
               legal_entity_key: user.legal_entity_key?.toString() || '',
               profil_id: user.profil_id?.toString() || '',
               business_partner_status: user.business_partner_status || 'active',
+              is_internal: user.is_internal || false
             });
           } else {
             setError(intl.formatMessage({ id: 'users.not_found' }));
@@ -86,7 +90,8 @@ export function UserEdit() {
     setSuccess(null);
 
     try {
-      await userService.updateUser(id!, formData);
+      const { is_internal, ...dataToSubmit } = formData;
+      await userService.updateUser(id!, dataToSubmit, is_internal);
       setSuccess(intl.formatMessage({ id: 'users.update_success' }));
       setTimeout(() => {
         navigate('/settings/users');
@@ -142,7 +147,7 @@ export function UserEdit() {
   }
 
   return (
-    <div className="p-6 max-w-2xl mx-auto space-y-6">
+    <div className="p-6 max-w-2xl mx-auto space-y-6 min-h-[calc(100vh-120px)] flex flex-col">
       <div className="flex items-center gap-4">
         <button
           onClick={() => navigate('/settings/users')}
@@ -262,23 +267,46 @@ export function UserEdit() {
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="business_partner_status">{intl.formatMessage({ id: 'users.table.status' })}</Label>
-              <Select
-                value={formData.business_partner_status}
-                onValueChange={(val) => setFormData((prev) => ({ ...prev, business_partner_status: val }))}
-              >
-                <SelectTrigger id="business_partner_status">
-                  <SelectValue placeholder={intl.formatMessage({ id: 'users.all_status' })} />
-                </SelectTrigger>
-                <SelectContent>
-                  {statuses.map((status) => (
-                    <SelectItem key={status} value={status}>
-                      {status && status.length > 0 ? status.charAt(0).toUpperCase() + status.slice(1) : status}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="business_partner_status">{intl.formatMessage({ id: 'users.table.status' })}</Label>
+                <Select
+                  value={formData.business_partner_status}
+                  onValueChange={(val) => setFormData((prev) => ({ ...prev, business_partner_status: val }))}
+                >
+                  <SelectTrigger id="business_partner_status">
+                    <SelectValue placeholder={intl.formatMessage({ id: 'users.all_status' })} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {statuses.map((status) => (
+                      <SelectItem key={status} value={status}>
+                        {status && status.length > 0 ? status.charAt(0).toUpperCase() + status.slice(1) : status}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {!formData.is_internal && (
+                <div className="space-y-2">
+                  <Label htmlFor="customer_channel">{intl.formatMessage({ id: 'loans.table.channel' })}</Label>
+                  <Select
+                    value={formData.customer_channel}
+                    onValueChange={(val) => setFormData((prev) => ({ ...prev, customer_channel: val }))}
+                  >
+                    <SelectTrigger id="customer_channel">
+                      <SelectValue placeholder={intl.formatMessage({ id: 'loans.table.channel' })} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {customerChannels.map(ch => (
+                        <SelectItem key={ch} value={ch}>
+                          {ch && ch.length > 0 ? ch.charAt(0).toUpperCase() + ch.slice(1) : ch}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
             </div>
 
             {error && (
@@ -305,6 +333,10 @@ export function UserEdit() {
           </form>
         </CardContent>
       </Card>
+      {/* FOOTER */}
+      <div className="flex justify-center items-center text-[7px] font-bold text-slate-400 uppercase tracking-[0.2em] px-1 mt-auto pt-10 opacity-40">
+        <span>{intl.formatMessage({ id: 'opco.copyright' })}</span>
+      </div>
     </div>
   );
 }

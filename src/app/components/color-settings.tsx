@@ -25,7 +25,7 @@ export function ColorSettings() {
   };
 
   return (
-    <div className="p-6 max-w-6xl mx-auto space-y-6">
+    <div className="p-6 max-w-6xl mx-auto space-y-6 min-h-[calc(100vh-120px)] flex flex-col">
       <div>
         <h1 className="text-2xl font-bold text-slate-900">{intl.formatMessage({ id: 'sidebar.color_settings' })}</h1>
         <p className="text-slate-600 text-sm mt-1">{intl.formatMessage({ id: 'color_settings.subtitle' })}</p>
@@ -88,6 +88,10 @@ export function ColorSettings() {
           </div>
         </CardContent>
       </Card>
+      {/* FOOTER */}
+      <div className="flex justify-center items-center text-[7px] font-bold text-slate-400 uppercase tracking-[0.2em] px-1 mt-auto pt-10 opacity-40">
+        <span>{intl.formatMessage({ id: 'opco.copyright' })}</span>
+      </div>
     </div>
   );
 }

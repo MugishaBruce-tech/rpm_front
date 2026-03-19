@@ -1,25 +1,48 @@
 import { createRoot } from "react-dom/client";
 import { IntlProvider } from "react-intl";
 import App from "./app/App.tsx";
+import { LocaleProvider, useLocaleContext, messages } from "./app/contexts/LocaleContext.tsx";
 import "./styles/index.css";
+import { registerSW } from 'virtual:pwa-register';
+import { initSync } from './app/services/syncQueue';
+import { apiRequest } from './app/services/api';
 
-// Import translations
-import en from "./app/lang/en.json";
-import fr from "./app/lang/fr.json";
-import kir from "./app/lang/kir.json";
+// Initialize sync listener
+initSync(apiRequest);
 
-const messages = {
-  en,
-  fr,
-  kir
-};
+// Register the service worker
+const updateSW = registerSW({
+  onNeedRefresh() {
+    // Optionally prompt the user to refresh
+    if (confirm('New content available. Reload?')) {
+      updateSW(true);
+    }
+  },
+  onOfflineReady() {
+    console.log('App ready to work offline');
+  },
+});
 
-// Detect language
-const locale = localStorage.getItem('app-locale') || navigator.language.split(/[-_]/)[0] || 'fr';
-const validLocale = (locale in messages) ? locale : 'fr';
+// Wrapper component that accesses the locale context
+function AppWithIntl() {
+  const { locale, currentMessages } = useLocaleContext();
+  
+  return (
+    <IntlProvider 
+      key={locale}
+      messages={currentMessages} 
+      locale={locale} 
+      defaultLocale="fr"
+    >
+      <App />
+    </IntlProvider>
+  );
+}
 
-createRoot(document.getElementById("root")!).render(
-  <IntlProvider messages={(messages as any)[validLocale]} locale={validLocale} defaultLocale="fr">
-    <App />
-  </IntlProvider>
+const root = createRoot(document.getElementById("root")!);
+
+root.render(
+  <LocaleProvider>
+    <AppWithIntl />
+  </LocaleProvider>
 );

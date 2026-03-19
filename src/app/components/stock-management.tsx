@@ -1,16 +1,19 @@
-import { Plus, Minus, Search, Edit, Trash2, Package, Layers, TrendingDown, AlertTriangle, X } from 'lucide-react';
+import { Plus, Minus, Search, Edit, Trash2, Package, Layers, TrendingDown, AlertTriangle, X, WifiOff } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useIntl } from 'react-intl';
 import { toast } from 'sonner';
 import Swal from 'sweetalert2';
 import { usePrimaryColor } from '../hooks/usePrimaryColor';
 import { apiRequest } from '../services/api';
+import { getPendingByEndpoint, addSyncListener, processQueue } from '../services/syncQueue';
+import { RefreshCw } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Skeleton } from './ui/skeleton';
 import { PartnerSelector } from './ui/PartnerSelector';
 import { usePartnerContext } from '../contexts/PartnerContext';
+import { RegionSelector } from './ui/RegionSelector';
 import { ProtectedResource } from './ui/ProtectedResource';
 
 interface StockItem {
@@ -22,6 +25,7 @@ interface StockItem {
   location: string;
   materialKey?: number;
   partnerName?: string;
+  fullDescription?: string;
 }
 
 const stockData = [
@@ -90,12 +94,63 @@ export function StockManagement() {
   const [statusFilter, setStatusFilter] = useState('');
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
+  const [isSyncing, setIsSyncing] = useState(false);
+
+  // Sync listener
+  useEffect(() => {
+    const removeListener = addSyncListener((status, syncedCount) => {
+      if (status === 'starting') {
+        setIsSyncing(true);
+      }
+      if (status === 'finished') {
+        setIsSyncing(false);
+        if (syncedCount && syncedCount > 0) {
+          toast.success("Synchronisation terminée", {
+            description: `${syncedCount} ajustement(s) de stock ont été envoyés.`
+          });
+        }
+      }
+      if (status === 'error') {
+        setIsSyncing(false);
+        toast.error("Échec de la synchronisation", {
+          description: "Impossible d'envoyer les ajustements en attente."
+        });
+      }
+    });
+    return removeListener;
+  }, []);
+
+  // Proactively refresh when sync state changes back to false
+  useEffect(() => {
+    if (!isSyncing) {
+      fetchStock();
+    }
+  }, [isSyncing]);
+
+  const handleManualSync = () => {
+    if (!navigator.onLine) {
+      toast.error("Impossible de synchroniser : Vous êtes hors-ligne.");
+      return;
+    }
+    processQueue(apiRequest);
+  };
 
   const { selectedPartner } = usePartnerContext();
 
   useEffect(() => {
-    fetchStock();
-  }, [selectedPartner]);
+    let isMounted = true;
+
+    const loadStock = async () => {
+      if (!isMounted) return;
+      await fetchStock();
+    };
+
+    loadStock();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [selectedPartner?.id]);
 
   const fetchStock = async () => {
     setLoading(true);
@@ -104,9 +159,9 @@ export function StockManagement() {
       const partnerQuery = selectedPartner ? `&partnerKey=${selectedPartner.id}` : '&global=true';
       const response = await apiRequest(`/inventory?limit=1000&offset=0${partnerQuery}`);
       console.log('Inventory response:', response);
-      
+
       const inventoryData = response.result || [];
-      
+
       // Transform API data to StockItem format
       const formattedStock: StockItem[] = inventoryData.map((item: any, index: number) => {
         // Determine status based on quantity
@@ -116,20 +171,43 @@ export function StockManagement() {
         } else if (item.physicalQty < 100) {
           status = 'WARNING';
         }
-        
+
         return {
           id: index + 1,
-          product: item.materialDescription || `Material ${item.materialKey}`,
+          product: item.material_name2 || item.materialDescription || `Material ${item.materialKey}`,
           sku: item.sku || item.globalMaterialId || `MAT${item.materialKey}`,
           status: status,
           physical: item.physicalQty || 0,
           location: item.partnerName || 'Unknown',
           materialKey: item.materialKey,
-          partnerName: item.partnerName
+          partnerName: item.partnerName,
+          fullDescription: item.materialDescription
         };
       });
-      
-      setStock(formattedStock);
+
+      // Merge pending adjustments from SyncQueue
+      const pendingAdjustments = getPendingByEndpoint('/inventory/adjust');
+      const updatedStock = formattedStock.map((item: StockItem) => {
+        const pending = pendingAdjustments.find(r => {
+          const body = typeof r.options.body === 'string' ? JSON.parse(r.options.body) : r.options.body;
+          return body.adjustments?.some((a: any) => a.material_key === item.materialKey);
+        });
+
+        if (pending) {
+          const body = typeof pending.options.body === 'string' ? JSON.parse(pending.options.body) : pending.options.body;
+          const adj = body.adjustments.find((a: any) => a.material_key === item.materialKey);
+          return {
+            ...item,
+            product: body._metadata?.productName || item.product,
+            sku: body._metadata?.sku || item.sku,
+            physical: adj.quantity, // Show the new intended quantity
+            status: 'PENDING_SYNC'
+          };
+        }
+        return item;
+      });
+
+      setStock(updatedStock);
     } catch (error) {
       console.error('Failed to fetch stock:', error);
     } finally {
@@ -149,13 +227,13 @@ export function StockManagement() {
 
   // Filter stock based on search and status
   const filteredStock = stock.filter(item => {
-    const searchMatch = !searchInput || 
+    const searchMatch = !searchInput ||
       item.product.toLowerCase().includes(searchInput.toLowerCase()) ||
       item.sku.toLowerCase().includes(searchInput.toLowerCase()) ||
       item.location.toLowerCase().includes(searchInput.toLowerCase());
-    
+
     const statusMatch = !statusFilter || item.status === statusFilter;
-    
+
     return searchMatch && statusMatch;
   });
 
@@ -236,22 +314,37 @@ export function StockManagement() {
 
       if (!confirm.isConfirmed) return;
 
-      await apiRequest('/inventory/adjust', {
-        method: 'POST',
-        body: JSON.stringify({
-          adjustments: [
-            { material_key: selectedMaterialKey, quantity: newAbsolute }
-          ],
-          reason
-        })
-      });
+      try {
+        await apiRequest('/inventory/adjust', {
+          method: 'POST',
+          body: JSON.stringify({
+            adjustments: [
+              { material_key: selectedMaterialKey, quantity: newAbsolute }
+            ],
+            reason,
+            CLIENT_ID: crypto.randomUUID(),
+            _metadata: {
+              productName: stock.find(s => s.materialKey === selectedMaterialKey)?.product || 'Produit',
+              sku: selectedSku
+            }
+          })
+        });
 
-      await fetchStock();
+        toast.success(intl.formatMessage({ id: 'inventory.adjusted' }), {
+          description: intl.formatMessage({ id: 'inventory.updated_success' })
+        });
+      } catch (err: any) {
+        if (err.message.includes('offline')) {
+          toast.warning(intl.formatMessage({ id: 'inventory.adjusted' }), {
+            description: "Mode Hors-ligne : Ajustement enregistré localement. Il sera synchronisé dès le retour de la connexion."
+          });
+        } else {
+          throw err;
+        }
+      }
+
       handleCloseModal();
-      
-      toast.success(intl.formatMessage({ id: 'inventory.adjusted' }), {
-        description: intl.formatMessage({ id: 'inventory.updated_success' })
-      });
+      fetchStock();
     } catch (err: any) {
       console.error('Adjust stock failed:', err);
       toast.error(intl.formatMessage({ id: 'inventory.adj_failed' }), {
@@ -261,7 +354,7 @@ export function StockManagement() {
   };
 
   return (
-    <div className="p-4 md:p-6 w-full max-w-full overflow-hidden space-y-6 min-w-0">
+    <div className="p-4 md:p-6 w-full max-w-full overflow-hidden space-y-6 min-w-0 min-h-[calc(100vh-120px)] flex flex-col">
       {/* Header Section */}
       {/* <div className="flex items-center justify-between">
         <div>
@@ -273,16 +366,29 @@ export function StockManagement() {
         </div>
       </div> */}
 
-    
-      
+
+
       {/* Stock Table Card */}
       <Card className="overflow-hidden">
         <CardHeader className="space-y-4">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div className="space-y-1">
+            <div className="flex items-center gap-3">
               <CardTitle>{intl.formatMessage({ id: 'sidebar.regional_inventory' })}</CardTitle>
+              {getPendingByEndpoint('/inventory').length > 0 && (
+                <Button
+                  onClick={handleManualSync}
+                  disabled={isSyncing}
+                  variant="outline"
+                  size="sm"
+                  className={`h-7 px-2 gap-1.5 text-[10px] font-bold ${isSyncing ? 'animate-pulse bg-amber-50 text-amber-600 border-amber-200' : 'bg-slate-50 text-slate-600'}`}
+                >
+                  <RefreshCw className={`w-3 h-3 ${isSyncing ? 'animate-spin' : ''}`} />
+                  {isSyncing ? intl.formatMessage({ id: 'common.syncing' }) : intl.formatMessage({ id: 'common.sync' })}
+                </Button>
+              )}
             </div>
             <div className="flex w-full sm:w-auto items-center gap-4">
+              <RegionSelector />
               <PartnerSelector />
               <ProtectedResource action={['STOCK_ADJUST_GLOBAL', 'STOCK_EDIT_SELF']}>
                 <Button onClick={() => handleOpenModal('ADD')} className="flex-1 sm:flex-initial gap-2" style={{ backgroundColor: primaryColor }} title={intl.formatMessage({ id: 'inventory.add' })}>
@@ -317,15 +423,15 @@ export function StockManagement() {
                         </div>
                       </div>
                       <div className="flex items-center gap-2 md:block">
-                        <span className="text-[10px] font-bold text-slate-400 uppercase md:hidden w-16">Status:</span>
+                        <span className="text-[10px] font-bold text-slate-400 uppercase md:hidden w-16">{intl.formatMessage({ id: 'dashboard.status' })}</span>
                         <Skeleton className="h-5 w-20 rounded-full" />
                       </div>
                       <div className="flex items-center gap-2 md:block">
-                        <span className="text-[10px] font-bold text-slate-400 uppercase md:hidden w-16">Stock:</span>
+                        <span className="text-[10px] font-bold text-slate-400 uppercase md:hidden w-16">{intl.formatMessage({ id: 'dashboard.quantity' })}</span>
                         <Skeleton className="h-6 w-12 rounded" />
                       </div>
                       <div className="flex items-center gap-2 md:block">
-                        <span className="text-[10px] font-bold text-slate-400 uppercase md:hidden w-16">Location:</span>
+                        <span className="text-[10px] font-bold text-slate-400 uppercase md:hidden w-16">{intl.formatMessage({ id: 'inventory.location' })}</span>
                         <Skeleton className="h-4 w-32" />
                       </div>
                       <div className="flex gap-2 pt-2 md:pt-0 border-t md:border-0 border-slate-50">
@@ -350,8 +456,8 @@ export function StockManagement() {
                   <thead>
                     <tr className="border-b border-slate-200">
                       <th className="text-left py-3 px-4 font-semibold text-slate-700">{intl.formatMessage({ id: 'inventory.liquidity' })}</th>
-                      <th className="text-left py-3 px-4 font-semibold text-slate-700">{intl.formatMessage({ id: 'loans.status_label' })}</th>
-                      <th className="text-left py-3 px-4 font-semibold text-slate-700">{intl.formatMessage({ id: 'loans.wait_time' }).replace(':', '')}</th>
+                      <th className="text-left py-3 px-4 font-semibold text-slate-700">{intl.formatMessage({ id: 'dashboard.status' })}</th>
+                      <th className="text-left py-3 px-4 font-semibold text-slate-700">{intl.formatMessage({ id: 'dashboard.quantity' })}</th>
                       <th className="text-left py-3 px-4 font-semibold text-slate-700">{intl.formatMessage({ id: 'inventory.location' })}</th>
                       <th className="text-left py-3 px-4 font-semibold text-slate-700">{intl.formatMessage({ id: 'inventory.actions' })}</th>
                     </tr>
@@ -365,18 +471,21 @@ export function StockManagement() {
                               <Layers className="w-4 h-4 text-slate-500" />
                             </div>
                             <div>
-                              <div className="text-sm font-medium text-slate-900">{item.sku}</div>
-                              <div className="text-xs text-slate-500">{item.product}</div>
+                              <div className="text-sm font-bold text-slate-900 leading-tight">{item.product}</div>
+                              {item.product !== item.fullDescription && (
+                                <div className="text-[10px] text-slate-500 font-bold uppercase leading-none mt-1 tracking-tighter">{item.fullDescription}</div>
+                              )}
                             </div>
                           </div>
                         </td>
                         <td className="py-3 px-4">
-                          <span className={`inline-flex items-center text-xs font-medium ${
-                            item.status === 'NORMAL' ? 'text-green-700' :
+                          <span className={`inline-flex items-center gap-1.5 text-xs font-medium ${item.status === 'NORMAL' ? 'text-green-700' :
                             item.status === 'WARNING' ? 'text-amber-700' :
-                            'text-red-700'
-                          }`}>
-                            {item.status}
+                              item.status === 'PENDING_SYNC' ? 'text-slate-500 animate-pulse' :
+                                'text-red-700'
+                            }`}>
+                            {item.status === 'PENDING_SYNC' && <WifiOff className="w-3 h-3" />}
+                            {item.status === 'PENDING_SYNC' ? intl.formatMessage({ id: 'common.syncing' }) : item.status}
                           </span>
                         </td>
                         <td className="py-3 px-4 text-slate-900 font-medium">{item.physical}</td>
@@ -384,22 +493,22 @@ export function StockManagement() {
                         <td className="py-3 px-4">
                           <ProtectedResource action={['STOCK_ADJUST_GLOBAL', 'STOCK_EDIT_SELF']}>
                             <div className="flex items-center justify-center gap-2">
-                                <button
-                                  onClick={() => handleOpenModal('ADD', item.sku)}
-                                  className="flex items-center gap-1.5 px-3 py-1.5 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-100 rounded-sm transition-all duration-200"
-                                  title={intl.formatMessage({ id: 'inventory.confirm_add_title' })}
-                                >
-                                  <Plus className="w-3.5 h-3.5" />
-                                  <span className="hidden sm:inline">{intl.formatMessage({ id: 'inventory.add' })}</span>
-                                </button>
-                                <button
-                                  onClick={() => handleOpenModal('REMOVE', item.sku)}
-                                  className="flex items-center gap-1.5 px-3 py-1.5 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-100 rounded-sm transition-all duration-200"
-                                  title={intl.formatMessage({ id: 'inventory.confirm_reduce_title' })}
-                                >
-                                  <Minus className="w-3.5 h-3.5" />
-                                  <span className="hidden sm:inline">{intl.formatMessage({ id: 'inventory.reduce' })}</span>
-                                </button>
+                              <button
+                                onClick={() => handleOpenModal('ADD', item.sku)}
+                                className="flex items-center gap-1.5 px-3 py-1.5 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-100 rounded-sm transition-all duration-200"
+                                title={intl.formatMessage({ id: 'inventory.confirm_add_title' })}
+                              >
+                                <Plus className="w-3.5 h-3.5" />
+                                <span className="hidden sm:inline">{intl.formatMessage({ id: 'inventory.add' })}</span>
+                              </button>
+                              <button
+                                onClick={() => handleOpenModal('REMOVE', item.sku)}
+                                className="flex items-center gap-1.5 px-3 py-1.5 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-100 rounded-sm transition-all duration-200"
+                                title={intl.formatMessage({ id: 'inventory.confirm_reduce_title' })}
+                              >
+                                <Minus className="w-3.5 h-3.5" />
+                                <span className="hidden sm:inline">{intl.formatMessage({ id: 'inventory.reduce' })}</span>
+                              </button>
                             </div>
                           </ProtectedResource>
                         </td>
@@ -410,7 +519,7 @@ export function StockManagement() {
               </div>
               <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-slate-200">
                 <div className="text-sm text-slate-600 order-2 sm:order-1 text-center sm:text-left">
-                   {intl.formatMessage({ id: 'inventory.showing_range' }, { start: startIndex + 1, end: endIndex, total: paginationTotal })}
+                  {intl.formatMessage({ id: 'inventory.showing_range' }, { start: startIndex + 1, end: endIndex, total: paginationTotal })}
                 </div>
                 <div className="flex flex-wrap items-center justify-center gap-2 order-1 sm:order-2">
                   <div className="flex items-center gap-1 mr-2">
@@ -441,7 +550,7 @@ export function StockManagement() {
             {/* Modal Header */}
             <div className="p-6 border-b border-slate-200 flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div 
+                <div
                   className="w-10 h-10 flex items-center justify-center text-white rounded"
                   style={{ backgroundColor: primaryColor }}
                 >
@@ -449,9 +558,9 @@ export function StockManagement() {
                 </div>
                 <div>
                   <h3 className="text-lg font-semibold text-slate-900">
-                    {modalMode === 'ADD' ? intl.formatMessage({ id: 'loans.clear_all' }).split(' ')[1] : intl.formatMessage({ id: 'inventory.lent_out' })}
+                    {modalMode === 'ADD' ? intl.formatMessage({ id: 'inventory.add_stock' }) : intl.formatMessage({ id: 'inventory.remove_stock' })}
                   </h3>
-                  <p className="text-xs text-slate-500 mt-1 uppercase tracking-wide">{selectedSku || intl.formatMessage({ id: 'loans.enter_pdv_placeholder' })}</p>
+                  <p className="text-xs text-slate-500 mt-1 uppercase tracking-wide">{selectedSku || intl.formatMessage({ id: 'loans.select_material_placeholder' })}</p>
                 </div>
               </div>
               <button
@@ -466,7 +575,7 @@ export function StockManagement() {
             <form onSubmit={handleSubmit} className="p-6 space-y-4">
               {!selectedSku && (
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-900">Product</label>
+                  <label className="text-sm font-medium text-slate-900">{intl.formatMessage({ id: 'dashboard.material' })}</label>
                   <select
                     className="w-full px-3 py-2 border border-slate-200 rounded-sm bg-white text-slate-900 text-sm"
                     value={selectedSku || ''}
@@ -488,10 +597,10 @@ export function StockManagement() {
               )}
 
               <div className="space-y-2">
-                <label className="text-sm font-medium text-slate-900">{intl.formatMessage({ id: 'loans.wait_time' }).replace(':', '')}</label>
+                <label className="text-sm font-medium text-slate-900">{intl.formatMessage({ id: 'dashboard.quantity' })}</label>
                 <input
                   type="number"
-                  placeholder={intl.formatMessage({ id: 'loans.enter_pdv_placeholder' })}
+                  placeholder="0"
                   min="1"
                   value={quantity}
                   onChange={(e) => setQuantity(e.target.value)}
@@ -500,9 +609,9 @@ export function StockManagement() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium text-slate-900">{intl.formatMessage({ id: 'loans.order_1_ext' }).split(' ')[0] || 'Reason'}</label>
+                <label className="text-sm font-medium text-slate-900">{intl.formatMessage({ id: 'inventory.audit_reason_label' })}</label>
                 <textarea
-                  placeholder={intl.formatMessage({ id: 'loans.enter_pdv_placeholder' })}
+                  placeholder={intl.formatMessage({ id: 'inventory.audit_reason_placeholder' })}
                   rows={3}
                   value={reason}
                   onChange={(e) => setReason(e.target.value)}
@@ -524,13 +633,17 @@ export function StockManagement() {
                   className="flex-1 px-4 py-2 text-white font-medium rounded transition-colors"
                   style={{ backgroundColor: primaryColor }}
                 >
-                  {modalMode === 'ADD' ? intl.formatMessage({ id: 'loans.clear_all' }).split(' ')[1] : intl.formatMessage({ id: 'inventory.lent_out' })}
+                  {modalMode === 'ADD' ? intl.formatMessage({ id: 'inventory.add' }) : intl.formatMessage({ id: 'inventory.reduce' })}
                 </button>
               </div>
             </form>
           </div>
         </div>
       )}
+      {/* FOOTER */}
+      <div className="flex justify-center items-center text-[7px] font-bold text-slate-400 uppercase tracking-[0.2em] px-1 mt-auto pt-10 opacity-40">
+        <span>{intl.formatMessage({ id: 'opco.copyright' })}</span>
+      </div>
     </div>
   );
 }

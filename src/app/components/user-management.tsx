@@ -18,15 +18,19 @@ export function UserManagement() {
   const [legalEntities, setLegalEntities] = useState<any[]>([]);
   const [regions, setRegions] = useState<string[]>([]);
   const [businessPartnerTypes, setBusinessPartnerTypes] = useState<string[]>([]);
+  const [customerChannels, setCustomerChannels] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [fetchingMetadata, setFetchingMetadata] = useState(true);
+
+  const currentUser = JSON.parse(localStorage.getItem('rpm-tracker-auth-user') || localStorage.getItem('user') || '{}');
+  const userRole = currentUser?.role || '';
 
   const [formData, setFormData] = useState({
     business_partner_name: '',
     user_ad: '',
-    region: 'North',
+    region: userRole === 'DDM' ? currentUser.region : '',
     business_partner_type: 'customer',
-    customer_channel: 'distributor',
+    customer_channel: '',
     legal_entity_key: '',
     profil_id: '',
   });
@@ -36,18 +40,38 @@ export function UserManagement() {
       try {
         setFetchingMetadata(true);
         const metadata = await userService.getMetadata();
-        setProfiles(metadata.profils || []);
+        
+        // Filter profiles based on requirements:
+        // MD_AGENT/OPCO_USER can create: OPCO_USER, MD_AGENT, DDM
+        // DDM can only create: SUB_D (which is a business partner)
+        let filteredProfiles = metadata.profils || [];
+        const internalProfileCodes = ['OPCO_USER', 'MD_AGENT', 'DDM'];
+        
+        if (userRole === 'MD_AGENT' || userRole === 'OPCO_USER' || userRole === 'ADMIN') {
+          filteredProfiles = filteredProfiles.filter((p: any) => 
+            internalProfileCodes.includes(p.CODE_PROFIL)
+          );
+        } else if (userRole === 'DDM') {
+          filteredProfiles = filteredProfiles.filter((p: any) => 
+            ['SUB_D'].includes(p.CODE_PROFIL)
+          );
+        }
+
+        setProfiles(filteredProfiles);
         setLegalEntities(metadata.legalEntities || []);
         setRegions(metadata.regions || []);
         setBusinessPartnerTypes(metadata.businessPartnerTypes || []);
+        const channels = metadata.customerChannels || [];
+        setCustomerChannels(channels);
         
-        // Update defaults if we have data
-        if (metadata.regions?.length && !formData.region) {
-          setFormData(p => ({ ...p, region: metadata.regions[0] }));
+        // Update defaults
+        if (channels.length > 0 && !formData.customer_channel) {
+          setFormData(prev => ({ ...prev, customer_channel: channels[0] }));
         }
-        if (metadata.businessPartnerTypes?.length && !formData.business_partner_type) {
-          setFormData(p => ({ ...p, business_partner_type: metadata.businessPartnerTypes[0] }));
+        if (filteredProfiles.length > 0 && !formData.profil_id) {
+          setFormData(prev => ({ ...prev, profil_id: filteredProfiles[0].PROFIL_ID?.toString() }));
         }
+
       } catch (err: any) {
         console.error('Failed to fetch metadata:', err);
       } finally {
@@ -55,14 +79,26 @@ export function UserManagement() {
       }
     };
     fetchMetadata();
-  }, []);
+  }, [userRole]);
+
+  // Determine if region select should be shown
+  // Only when the selected profile is DDM OR if current user is DDM (creating SUB_D)
+  const selectedProfile = profiles.find(p => p.PROFIL_ID?.toString() === formData.profil_id || String(p.PROFIL_ID) === formData.profil_id);
+  const showRegionSelect = (selectedProfile?.CODE_PROFIL === 'DDM') && (userRole !== 'DDM');
+  const isCreatingInternal = ['OPCO_USER', 'MD_AGENT', 'DDM'].includes(selectedProfile?.CODE_PROFIL);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      const result = await userService.createUser(formData);
+      // If profile is not DDM and current user is not DDM, clear region
+      const dataToSubmit = { ...formData };
+      if (!showRegionSelect && userRole !== 'DDM') {
+        dataToSubmit.region = '';
+      }
+
+      const result = await userService.createUser(dataToSubmit);
       toast.success(intl.formatMessage({ id: 'users.create_success' }), {
         description: result?.password ? `${intl.formatMessage({ id: 'users.password_label' })}: ${result.password}` : '',
         duration: 8000
@@ -73,9 +109,9 @@ export function UserManagement() {
       setFormData({
         business_partner_name: '',
         user_ad: '',
-        region: 'North',
+        region: userRole === 'DDM' ? currentUser.region : '',
         business_partner_type: 'customer',
-        customer_channel: 'distributor',
+        customer_channel: '',
         legal_entity_key: '',
         profil_id: '',
       });
@@ -93,7 +129,7 @@ export function UserManagement() {
 
   if (fetchingMetadata) {
     return (
-      <div className="p-6 max-w-2xl mx-auto space-y-6">
+      <div className="p-6 max-w-2xl mx-auto space-y-6 min-h-[calc(100vh-120px)] flex flex-col">
         <Card>
           <CardHeader>
             <Skeleton className="h-6 w-48 mb-2" />
@@ -126,7 +162,7 @@ export function UserManagement() {
   }
 
   return (
-    <div className="p-6 max-w-2xl mx-auto space-y-6">
+    <div className="p-6 max-w-2xl mx-auto space-y-6 min-h-[calc(100vh-120px)] flex flex-col">
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -163,41 +199,65 @@ export function UserManagement() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="region">{intl.formatMessage({ id: 'users.form.region' })}</Label>
-                <Select
-                  value={formData.region}
-                  onValueChange={(val) => setFormData((prev) => ({ ...prev, region: val }))}
-                >
-                  <SelectTrigger id="region">
-                    <SelectValue placeholder={intl.formatMessage({ id: 'users.form.select_region' })} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {regions.map((reg) => (
-                      <SelectItem key={reg} value={reg}>{reg}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              {showRegionSelect && (
+                <div className="space-y-2">
+                  <Label htmlFor="region">{intl.formatMessage({ id: 'users.form.region' })}</Label>
+                  <Select
+                    value={formData.region}
+                    onValueChange={(val) => setFormData((prev) => ({ ...prev, region: val }))}
+                  >
+                    <SelectTrigger id="region">
+                      <SelectValue placeholder={intl.formatMessage({ id: 'users.form.select_region' })} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {regions.map((reg) => (
+                        <SelectItem key={reg} value={reg}>{reg}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
 
-              <div className="space-y-2">
-                <Label htmlFor="business_partner_type">{intl.formatMessage({ id: 'users.form.type' })}</Label>
-                <Select
-                  value={formData.business_partner_type}
-                  onValueChange={(val) => setFormData((prev) => ({ ...prev, business_partner_type: val }))}
-                >
-                  <SelectTrigger id="business_partner_type">
-                    <SelectValue placeholder={intl.formatMessage({ id: 'users.form.select_type' })} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {businessPartnerTypes.map((type) => (
-                      <SelectItem key={type} value={type}>
-                        {type && type.length > 0 ? type.charAt(0).toUpperCase() + type.slice(1) : type}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              {selectedProfile?.CODE_PROFIL === 'SUB_D' && (
+                <>
+                <div className="space-y-2">
+                  <Label htmlFor="business_partner_type">{intl.formatMessage({ id: 'users.form.type' })}</Label>
+                  <Select
+                    value={formData.business_partner_type}
+                    onValueChange={(val) => setFormData((prev) => ({ ...prev, business_partner_type: val }))}
+                  >
+                    <SelectTrigger id="business_partner_type">
+                      <SelectValue placeholder={intl.formatMessage({ id: 'users.form.select_type' })} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {businessPartnerTypes.map((type) => (
+                        <SelectItem key={type} value={type}>
+                          {type && type.length > 0 ? type.charAt(0).toUpperCase() + type.slice(1) : type}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="customer_channel">{intl.formatMessage({ id: 'loans.table.channel' })}</Label>
+                  <Select
+                    value={formData.customer_channel}
+                    onValueChange={(val) => setFormData((prev) => ({ ...prev, customer_channel: val }))}
+                  >
+                    <SelectTrigger id="customer_channel">
+                      <SelectValue placeholder={intl.formatMessage({ id: 'loans.table.channel' })} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {customerChannels.map(ch => (
+                        <SelectItem key={ch} value={ch}>
+                          {ch && ch.length > 0 ? ch.charAt(0).toUpperCase() + ch.slice(1) : ch}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                </>
+              )}
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -251,6 +311,10 @@ export function UserManagement() {
           </form>
         </CardContent>
       </Card>
+      {/* FOOTER */}
+      <div className="flex justify-center items-center text-[7px] font-bold text-slate-400 uppercase tracking-[0.2em] px-1 mt-auto pt-10 opacity-40">
+        <span>{intl.formatMessage({ id: 'opco.copyright' })}</span>
+      </div>
     </div>
   );
 }

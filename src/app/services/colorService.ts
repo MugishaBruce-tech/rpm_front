@@ -1,5 +1,5 @@
 export const COLOR_OPTIONS = [
-  { id: 'green', name: 'Green', value: '#168c17', description: 'Fresh and natural' },
+  { id: 'green', name: 'Green', value: '#00a63e', description: 'Fresh and natural' },
     { id: 'green', name: 'Green', value: '#145d15ff', description: 'Fresh and natural' },
   { id: 'green', name: 'Green', value: '#075108ff', description: 'Fresh and natural' },
   { id: 'green', name: 'Green', value: '#174217ff', description: 'Fresh and natural' },

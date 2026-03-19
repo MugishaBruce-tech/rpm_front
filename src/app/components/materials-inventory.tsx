@@ -24,7 +24,7 @@ export function MaterialsInventory() {
       setLoading(true);
       try {
         const data = await dashboardService.getLoanBalances({ partnerKey: selectedPartner?.id });
-        setChartData(data.slice(0, 6)); // Limit to 6 for clarity in 3D
+        setChartData(data);
       } catch (error) {
         console.error('Failed to fetch chart data:', error);
       } finally {

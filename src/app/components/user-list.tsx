@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Skeleton } from './ui/skeleton';
 import { ProtectedResource } from './ui/ProtectedResource';
-import { Plus, Users, Edit2, Trash, AlertCircle, ChevronLeft, ChevronRight, Save, History, Clock, MapPin, Monitor, Smartphone, Globe } from 'lucide-react';
+import { Plus, Users, Edit2, Trash, AlertCircle, ChevronLeft, ChevronRight, Save, History, Clock, MapPin, Monitor, Smartphone, Globe, Key } from 'lucide-react';
 
 export function UserList() {
   const intl = useIntl();
@@ -72,6 +72,10 @@ export function UserList() {
   const [logsLoading, setLogsLoading] = useState(false);
   const [userLogs, setUserLogs] = useState<any[]>([]);
   const [selectedUser, setSelectedUser] = useState<any>(null);
+  
+  const [showResetModal, setShowResetModal] = useState(false);
+  const [resetLoading, setResetLoading] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
 
   useEffect(() => {
     fetchMetadata();
@@ -148,6 +152,29 @@ export function UserList() {
     }
   };
 
+  const handleResetClick = (user: any) => {
+    setSelectedUser(user);
+    setNewPassword('');
+    setShowResetModal(true);
+  };
+
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedUser || !newPassword) return;
+
+    try {
+      setResetLoading(true);
+      await userService.resetPassword(selectedUser.business_partner_key.toString(), newPassword, !!selectedUser.is_internal);
+      setShowResetModal(false);
+      toast.success(intl.formatMessage({ id: 'users.reset_success' }, { name: selectedUser.business_partner_name }));
+    } catch (err: any) {
+      console.error('Failed to reset password:', err);
+      toast.error(err.message || 'Failed to reset password');
+    } finally {
+      setResetLoading(false);
+    }
+  };
+
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     setPage(1);
@@ -169,7 +196,7 @@ export function UserList() {
     }
   };
 
-  const handleDelete = async (id: number, name: string) => {
+  const handleDelete = async (id: number, name: string, is_internal: boolean = false) => {
     const result = await Swal.fire({
       title: intl.formatMessage({ id: 'users.delete_confirm_title' }),
       text: intl.formatMessage({ id: 'users.delete_confirm_text' }, { name }),
@@ -184,8 +211,8 @@ export function UserList() {
     if (result.isConfirmed) {
       try {
         setDeleting(true);
-        await userService.deleteUser(id.toString());
-        setUsers(users.filter(u => u.business_partner_key !== id));
+        await userService.deleteUser(id.toString(), is_internal);
+        setUsers(users.filter(u => u.business_partner_key !== id || u.is_internal !== is_internal));
         toast.success(intl.formatMessage({ id: 'users.delete_success' }, { name }));
       } catch (err: any) {
         console.error('Failed to delete user:', err);
@@ -206,7 +233,7 @@ export function UserList() {
   };
 
   return (
-    <div className="p-4 md:p-6 w-full max-w-full overflow-hidden space-y-6 min-w-0">
+    <div className="p-4 md:p-6 w-full max-w-full overflow-hidden space-y-6 min-w-0 min-h-[calc(100vh-120px)] flex flex-col">
       
       {/* Users Table Card */}
       <Card className="overflow-hidden">
@@ -357,6 +384,7 @@ export function UserList() {
                       <th className="text-left py-3 px-4 font-semibold text-slate-700">{intl.formatMessage({ id: 'users.table.email' })}</th>
                       <th className="text-left py-3 px-4 font-semibold text-slate-700">{intl.formatMessage({ id: 'users.table.region' })}</th>
                       <th className="text-left py-3 px-4 font-semibold text-slate-700">{intl.formatMessage({ id: 'users.table.type' })}</th>
+                      <th className="text-left py-3 px-4 font-semibold text-slate-700">{intl.formatMessage({ id: 'users.form.profile' })}</th>
                       <th className="text-left py-3 px-4 font-semibold text-slate-700">{intl.formatMessage({ id: 'users.table.last_login' })}</th>
                       <th className="text-left py-3 px-4 font-semibold text-slate-700">{intl.formatMessage({ id: 'users.table.status' })}</th>
                       <th className="text-left py-3 px-4 font-semibold text-slate-700">{intl.formatMessage({ id: 'users.table.actions' })}</th>
@@ -373,6 +401,43 @@ export function UserList() {
                             style={{ backgroundColor: user.business_partner_type === 'customer' ? '#dbeafe' : '#fef3c7', color: user.business_partner_type === 'customer' ? '#1e40af' : '#92400e' }}>
                             {user.business_partner_type}
                           </span>
+                        </td>
+                        <td className="py-3 px-4">
+                          {(() => {
+                            const profileCode = user.profil?.CODE_PROFIL || 
+                                              user.CODE_PROFIL || 
+                                              user.PROFIL_CODE ||
+                                              (profiles.length > 0 ? profiles.find(p => String(p.PROFIL_ID) === String(user.profil_id || user.PROFIL_ID || user.profil?.PROFIL_ID))?.CODE_PROFIL : null) || 
+                                              user.profil_name || 
+                                              user.role || 
+                                              user.role_name;
+                            
+                            if (!profileCode || profileCode === '-') {
+                              return <span className="text-slate-300">-</span>;
+                            }
+
+                            // Define colors based on profile code
+                            let badgeStyle = { bg: 'bg-slate-100', text: 'text-slate-600', border: 'border-slate-200' };
+                            const upperCode = String(profileCode).toUpperCase();
+                            
+                            if (upperCode.includes('ADMIN') || upperCode.includes('MD_AGENT')) {
+                              badgeStyle = { bg: 'bg-rose-50', text: 'text-rose-700', border: 'border-rose-100' };
+                            } else if (upperCode.includes('OPCO')) {
+                              badgeStyle = { bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-100' };
+                            } else if (upperCode.includes('DDM')) {
+                              badgeStyle = { bg: 'bg-indigo-50', text: 'text-indigo-700', border: 'border-indigo-100' };
+                            } else if (upperCode.includes('SUB_D') || upperCode.includes('AGENT')) {
+                              badgeStyle = { bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-100' };
+                            } else if (upperCode.includes('USER')) {
+                              badgeStyle = { bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-100' };
+                            }
+
+                            return (
+                              <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-tight border ${badgeStyle.bg} ${badgeStyle.text} ${badgeStyle.border}`}>
+                                {profileCode}
+                              </span>
+                            );
+                          })()}
                         </td>
                         <td className="py-3 px-4 text-slate-600 text-xs">
                           {user.last_login_at ? (
@@ -405,6 +470,13 @@ export function UserList() {
                             >
                               <History className="w-4 h-4" />
                             </button>
+                            <button
+                              onClick={() => handleResetClick(user)}
+                              className="p-2 hover:bg-amber-100 rounded-lg transition-colors text-amber-600"
+                              title={intl.formatMessage({ id: 'users.reset_password' })}
+                            >
+                              <Key className="w-4 h-4" />
+                            </button>
                             <ProtectedResource action="USER_EDIT_REGION">
                               <button
                                 onClick={() => handleEditClick(user)}
@@ -416,7 +488,7 @@ export function UserList() {
                             </ProtectedResource>
                             <ProtectedResource action="USER_DELETE_REGION">
                               <button
-                                onClick={() => handleDelete(user.business_partner_key, user.business_partner_name)}
+                                onClick={() => handleDelete(user.business_partner_key, user.business_partner_name, user.is_internal)}
                                 className="p-2 hover:bg-red-100 rounded-lg transition-colors text-red-600"
                                 title={intl.formatMessage({ id: 'users.tooltip.delete' })}
                               >
@@ -442,11 +514,11 @@ export function UserList() {
                 </div>
                 <div className="flex flex-wrap items-center justify-center gap-2 order-1 sm:order-2">
                   <div className="flex items-center gap-1 mr-2">
-                    <Button onClick={() => setPage(1)} disabled={!pagination.hasPreviousPage} variant="outline" size="sm" className="px-2" title={intl.formatMessage({ id: 'inventory.first' })}>≪</Button>
-                    <Button onClick={() => setPage(page - 1)} disabled={!pagination.hasPreviousPage} variant="outline" size="sm" className="px-2" title={intl.formatMessage({ id: 'inventory.prev' })}>‹</Button>
-                    <div className="px-3 py-1 border border-slate-300 rounded-sm text-sm font-medium text-slate-700 bg-blue-50">{page}</div>
-                    <Button onClick={() => setPage(page + 1)} disabled={!pagination.hasNextPage} variant="outline" size="sm" className="px-2" title={intl.formatMessage({ id: 'inventory.next' })}>›</Button>
-                    <Button onClick={() => setPage(pagination.totalPages)} disabled={!pagination.hasNextPage} variant="outline" size="sm" className="px-2" title={intl.formatMessage({ id: 'inventory.last' })}>≫</Button>
+                    <Button onClick={() => setPage(1)} disabled={page <= 1} variant="outline" size="sm" className="px-2" title={intl.formatMessage({ id: 'inventory.first' })}>≪</Button>
+                    <Button onClick={() => setPage(page - 1)} disabled={page <= 1} variant="outline" size="sm" className="px-2" title={intl.formatMessage({ id: 'inventory.prev' })}>‹</Button>
+                    <div className="px-3 py-1 border border-slate-300 rounded-sm text-sm font-medium text-slate-700 bg-blue-50">{page} / {pagination.totalPages || 1}</div>
+                    <Button onClick={() => setPage(page + 1)} disabled={page >= pagination.totalPages} variant="outline" size="sm" className="px-2" title={intl.formatMessage({ id: 'inventory.next' })}>›</Button>
+                    <Button onClick={() => setPage(pagination.totalPages)} disabled={page >= pagination.totalPages} variant="outline" size="sm" className="px-2" title={intl.formatMessage({ id: 'inventory.last' })}>≫</Button>
                   </div>
                   <select
                     value={limit}
@@ -955,6 +1027,60 @@ export function UserList() {
           </Card>
         </div>
       )}
+      {/* Reset Password Modal */}
+      {showResetModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <Card className="w-full max-w-md shadow-2xl animate-in fade-in zoom-in duration-200">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Key className="w-5 h-5 text-amber-600" />
+                {intl.formatMessage({ id: 'users.reset_password' })}
+              </CardTitle>
+              <CardDescription>
+                {intl.formatMessage({ id: 'users.reset_password_desc' }, { name: selectedUser?.business_partner_name })}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleResetPassword} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="new_password">{intl.formatMessage({ id: 'users.new_password' })}</Label>
+                  <Input
+                    id="new_password"
+                    type="password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    required
+                    placeholder="••••••••"
+                  />
+                </div>
+                <div className="flex gap-3 pt-2">
+                  <Button
+                    type="button"
+                    onClick={() => setShowResetModal(false)}
+                    variant="outline"
+                    className="flex-1"
+                  >
+                    {intl.formatMessage({ id: 'users.cancel' })}
+                  </Button>
+                  <Button
+                    type="submit"
+                    disabled={resetLoading}
+                    className="flex-1 text-white"
+                    style={{ backgroundColor: primaryColor }}
+                  >
+                    {resetLoading ? intl.formatMessage({ id: 'users.updating' }) : intl.formatMessage({ id: 'users.update_btn' })}
+                  </Button>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* FOOTER */}
+      <div className="flex justify-center items-center text-[7px] font-bold text-slate-400 uppercase tracking-[0.2em] px-1 mt-auto pt-10 opacity-40">
+        <span>{intl.formatMessage({ id: 'opco.copyright' })}</span>
+      </div>
     </div>
   );
 }
