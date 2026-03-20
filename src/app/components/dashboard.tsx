@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useIntl } from 'react-intl';
-import { Clock, Package, ArrowRightLeft, TrendingUp, AlertCircle, ShieldCheck, Download, Activity, Star } from 'lucide-react';
+import { Clock, Package, ArrowRightLeft, TrendingUp, AlertCircle, ShieldCheck, Download, Activity, Star, Layers } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { motion, AnimatePresence } from 'framer-motion';
 import { StatsOverview } from './stats-overview';
@@ -313,7 +313,7 @@ export function Dashboard() {
                   {/* Performance Highlights */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     {[
-                      { label: intl.formatMessage({ id: 'dashboard.physical_stock_units' }), value: stats?.physicalStockUnits || 0, icon: Package, color: '#008200', trend: '+2.1%', type: intl.formatMessage({ id: 'dashboard.sku_total' }) },
+                      { label: intl.formatMessage({ id: 'dashboard.physical_stock_units' }), value: stats?.physicalStockUnits || 0, icon: Layers, color: '#008200', trend: '+2.1%', type: intl.formatMessage({ id: 'dashboard.sku_total' }) },
                       { label: intl.formatMessage({ id: 'dashboard.active_loans' }), value: stats?.totalLoanItems || 0, icon: ArrowRightLeft, color: '#D71921', trend: intl.formatMessage({ id: 'dashboard.optimal' }), type: intl.formatMessage({ id: 'dashboard.in_transit' }) },
                       { label: intl.formatMessage({ id: 'dashboard.total_sales_transactions' }), value: stats?.totalSalesTransactions || 0, icon: TrendingUp, color: '#008200', trend: '+5.3%', type: intl.formatMessage({ id: 'dashboard.transactions' }) },
                       { label: intl.formatMessage({ id: 'dashboard.system_health' }), value: '100%', icon: ShieldCheck, color: '#D71921', trend: intl.formatMessage({ id: 'dashboard.verified' }), type: intl.formatMessage({ id: 'dashboard.kpi_status' }) }
