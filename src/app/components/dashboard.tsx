@@ -31,7 +31,7 @@ export function Dashboard() {
     const user = authService.getCurrentUser();
     if (user) {
       if (user.region) setRegion(user.region);
-      
+
       // Determine dashboard type based on user role
       if (user.role === 'DDM') {
         setIsOpco(true);
@@ -46,17 +46,17 @@ export function Dashboard() {
   // Load SUB_D specific data - only runs once when SUB_D is detected
   useEffect(() => {
     if (!isSubD) return;
-    
+
     let isMounted = true;
-    
+
     const loadSubDData = async () => {
       try {
         setLoading(true);
         const user = authService.getCurrentUser();
         if (!user?.id) return;
-        
+
         const params = { partnerKey: user.id };
-        
+
         const [dashboardStats, materials] = await Promise.all([
           dashboardService.getDashboardStats(params).catch(() => ({ physicalStockUnits: 0, totalLoanItems: 0 })),
           dashboardService.getMaterialMetrics(params).catch(() => [])
@@ -74,7 +74,7 @@ export function Dashboard() {
     };
 
     loadSubDData();
-    
+
     // Cleanup function to prevent state updates on unmounted component
     return () => {
       isMounted = false;
@@ -111,10 +111,10 @@ export function Dashboard() {
               buffer: logoBuffer,
               extension: 'png',
             });
-            
+
             // Place logo overlay in the top-right area of the green header
             worksheet.addImage(logoId, {
-              tl: { col: 5.15, row: 0.3 }, 
+              tl: { col: 5.15, row: 0.3 },
               ext: { width: 90, height: 75 } // Enlarged logo for better visibility
             });
           } catch (e) {
@@ -126,7 +126,7 @@ export function Dashboard() {
           worksheet.mergeCells(`A${metaRow}:C${metaRow}`);
           worksheet.getCell(`A${metaRow}`).value = `Généré par: ${authService.getCurrentUser()?.name || 'Utilisateur'}`;
           worksheet.getCell(`A${metaRow}`).font = { bold: true, size: 11, color: { argb: 'FF1E293B' } };
-          
+
           worksheet.mergeCells(`D${metaRow}:F${metaRow}`);
           worksheet.getCell(`D${metaRow}`).value = `Date: ${new Date().toLocaleString()}`;
           worksheet.getCell(`D${metaRow}`).alignment = { horizontal: 'right' };
@@ -137,11 +137,11 @@ export function Dashboard() {
           canvas.width = 1000;
           canvas.height = 500;
           const ctx = canvas.getContext('2d')!;
-          
+
           // Draw a clean background and chart
           ctx.fillStyle = '#FFFFFF';
           ctx.fillRect(0, 0, canvas.width, canvas.height);
-          
+
           // Simple Bar Chart
           const totalItems = materialData.length;
           const maxValue = Math.max(...materialData.map(m => m.value || 0), 10);
@@ -154,18 +154,18 @@ export function Dashboard() {
             const h = ((m.value || 0) / maxValue) * chartHeight;
             ctx.fillStyle = m.color || '#008200';
             ctx.fillRect(startX + i * barWidth + 20, startY - h, barWidth - 40, h);
-            
+
             // Labels
             ctx.fillStyle = '#64748B';
             ctx.font = 'bold 16px Arial';
             ctx.textAlign = 'center';
             const label = m.code.length > 15 ? m.code.substring(0, 12) + '...' : m.code;
-            ctx.fillText(label, startX + i * barWidth + (barWidth/2), startY + 40);
-            
+            ctx.fillText(label, startX + i * barWidth + (barWidth / 2), startY + 40);
+
             // Values
             ctx.fillStyle = '#0F172A';
             ctx.font = 'bold 18px Arial';
-            ctx.fillText(String(m.value || 0), startX + i * barWidth + (barWidth/2), startY - h - 15);
+            ctx.fillText(String(m.value || 0), startX + i * barWidth + (barWidth / 2), startY - h - 15);
           });
 
           // Embed image in excel
@@ -174,7 +174,7 @@ export function Dashboard() {
             base64: imageBase64,
             extension: 'png',
           });
-          
+
           // Place chart after metadata
           worksheet.addImage(imageId, {
             tl: { col: 0.2, row: 7 },
@@ -206,7 +206,7 @@ export function Dashboard() {
               (m.value || 0) > 10 ? 'OK' : 'STOCK BAS'
             ];
             r.height = 20;
-            
+
             // Alternate banding
             if (idx % 2 === 1) {
               r.eachCell(cell => {
@@ -216,11 +216,11 @@ export function Dashboard() {
 
             // Cell styling
             r.eachCell((cell, colId) => {
-               cell.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } };
-               if (colId === 4) cell.font = { bold: true };
-               if (colId === 6) {
-                 cell.font = { bold: true, color: { argb: (m.value || 0) > 10 ? 'FF008200' : 'FFD71921' } };
-               }
+              cell.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } };
+              if (colId === 4) cell.font = { bold: true };
+              if (colId === 6) {
+                cell.font = { bold: true, color: { argb: (m.value || 0) > 10 ? 'FF008200' : 'FFD71921' } };
+              }
             });
           });
 
@@ -239,7 +239,7 @@ export function Dashboard() {
           const timestamp = `${now.toISOString().split('T')[0]}_${now.getHours()}-${now.getMinutes()}-${now.getSeconds()}`;
           const userName = (authService.getCurrentUser()?.name || 'utilisateur').replace(/\s+/g, '_');
           saveAs(blob, `inventaire-rpm-${userName}-${timestamp}.xlsx`);
-          
+
           resolve(true);
         } catch (err) {
           reject(err);
@@ -270,7 +270,7 @@ export function Dashboard() {
         <div className="fixed inset-0 pointer-events-none flex items-center justify-center overflow-hidden z-0">
           <Star className="w-[900px] h-[900px] text-red-600/5 rotate-12 blur-[1px] drop-shadow-[0_0_30px_rgba(220,38,38,0.08)]" />
         </div>
-        
+
         <header className="bg-white border-b border-slate-200 z-[100] relative">
           <div className="max-w-[1600px] mx-auto px-6 py-4 sm:h-16 flex items-center justify-between">
             <div className="flex items-center gap-4">
@@ -280,226 +280,270 @@ export function Dashboard() {
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">{intl.formatMessage({ id: 'dashboard.multi_depot_monitoring' })}</p>
               </div>
             </div>
-              <div className="bg-white border border-slate-200 px-4 py-2 rounded-lg shadow-sm flex items-center gap-2">
-                <Clock className="w-4 h-4 text-emerald-500" />
-                <span className="text-[11px] font-black text-slate-600 uppercase tabular-nums">
-                  {new Date().toLocaleTimeString()}
-                </span>
-              </div>
+            <div className="bg-white border border-slate-200 px-4 py-2 rounded-lg shadow-sm flex items-center gap-2">
+              <Clock className="w-4 h-4 text-emerald-500" />
+              <span className="text-[11px] font-black text-slate-600 uppercase tabular-nums">
+                {new Date().toLocaleTimeString()}
+              </span>
             </div>
-          </header>
+          </div>
+        </header>
 
-          <main className="max-w-[1600px] mx-auto w-full px-6 py-8 flex-1">
-            <AnimatePresence mode="wait">
-              {loading ? (
-                <motion.div 
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className="h-[60vh] flex items-center justify-center flex-col gap-5"
-                >
-                  <div className="w-16 h-16 border-4 border-green-600/10 border-t-green-600 rounded-full animate-spin" />
-                  <span className="text-sm font-bold tracking-widest text-[#008200] uppercase">
-                    {intl.formatMessage({ id: 'dashboard.loading' })}
-                  </span>
-                </motion.div>
-              ) : (
-                <motion.div 
-                  initial={{ opacity: 0, y: 15 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="space-y-4"
-                >
-                  
-                  {/* Performance Highlights */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                    {[
-                      { label: intl.formatMessage({ id: 'dashboard.physical_stock_units' }), value: stats?.physicalStockUnits || 0, icon: Layers, color: '#008200', trend: '+2.1%', type: intl.formatMessage({ id: 'dashboard.sku_total' }) },
-                      { label: intl.formatMessage({ id: 'dashboard.active_loans' }), value: stats?.totalLoanItems || 0, icon: ArrowRightLeft, color: '#D71921', trend: intl.formatMessage({ id: 'dashboard.optimal' }), type: intl.formatMessage({ id: 'dashboard.in_transit' }) },
-                      { label: intl.formatMessage({ id: 'dashboard.total_sales_transactions' }), value: stats?.totalSalesTransactions || 0, icon: TrendingUp, color: '#008200', trend: '+5.3%', type: intl.formatMessage({ id: 'dashboard.transactions' }) },
-                      { label: intl.formatMessage({ id: 'dashboard.system_health' }), value: '100%', icon: ShieldCheck, color: '#D71921', trend: intl.formatMessage({ id: 'dashboard.verified' }), type: intl.formatMessage({ id: 'dashboard.kpi_status' }) }
-                    ].map((kpi, i) => (
-                      <motion.div 
-                        key={kpi.label}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: i * 0.1 }}
-                        className="group p-6 rounded-lg bg-white border border-slate-200 hover:border-green-600/30 transition-all shadow-sm hover:shadow-xl hover:shadow-green-900/5 relative overflow-hidden"
-                      >
-                        <div className="absolute top-0 right-0 w-16 h-16 bg-slate-50 flex items-center justify-center rounded-bl-xl border-l border-b border-slate-100">
-                          <kpi.icon className="w-6 h-6" style={{ color: kpi.color }} />
-                        </div>
-                        <div className="space-y-2">
-                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{kpi.type}</p>
-                          <h3 className="text-3xl font-extrabold text-slate-900">
-                            {typeof kpi.value === 'number' ? kpi.value.toLocaleString() : kpi.value}
-                          </h3>
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs font-bold text-slate-800">{kpi.label}</span>
-                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${kpi.trend === 'Optimal' || kpi.trend === 'Verified' || kpi.trend.includes('optimal') || kpi.trend.includes('Verified') ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}`}>
-                              {kpi.trend}
-                            </span>
-                          </div>
-                        </div>
-                      </motion.div>
-                    ))}
-                  </div>
+        <main className="max-w-[1600px] mx-auto w-full px-6 py-8 flex-1">
+          <AnimatePresence mode="wait">
+            {loading ? (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="h-[60vh] flex items-center justify-center flex-col gap-5"
+              >
+                <div className="w-16 h-16 border-4 border-green-600/10 border-t-green-600 rounded-full animate-spin" />
+                <span className="text-sm font-bold tracking-widest text-[#008200] uppercase">
+                  {intl.formatMessage({ id: 'dashboard.loading' })}
+                </span>
+              </motion.div>
+            ) : (
+              <motion.div
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="space-y-4"
+              >
 
-                  {/* Main Content Grid */}
-                  <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
-                    {/* Inventory Overview */}
-                    <div className="lg:col-span-3 p-8 rounded-xl bg-white border border-slate-200 shadow-sm">
-                      <div className="flex items-center justify-between mb-6">
-                        <div>
-                          <h3 className="text-lg font-black text-slate-900">{intl.formatMessage({ id: 'dashboard.all_materials' })}</h3>
-                          <p className="text-xs text-slate-500 font-medium mt-1 uppercase tracking-tighter">
-                            {intl.formatMessage({ id: 'dashboard.total_materials' })} {materialData.length}
-                          </p>
-                        </div>
-                        <div 
-                          className="p-3 rounded-lg bg-green-600 text-white shadow-lg shadow-green-900/20 hover:bg-green-700 transition-all cursor-pointer"
-                          onClick={handleExportExcel}
-                        >
-                          <Download className="w-5 h-5" />
+                {/* Performance Highlights */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                  {[
+                    { label: intl.formatMessage({ id: 'dashboard.physical_stock_units' }), value: stats?.physicalStockUnits || 0, icon: Layers, color: '#008200', trend: '+2.1%', type: intl.formatMessage({ id: 'dashboard.sku_total' }) },
+                    { label: intl.formatMessage({ id: 'dashboard.active_loans' }), value: stats?.totalLoanItems || 0, icon: ArrowRightLeft, color: '#D71921', trend: intl.formatMessage({ id: 'dashboard.optimal' }), type: intl.formatMessage({ id: 'dashboard.in_transit' }) },
+                    { label: intl.formatMessage({ id: 'dashboard.total_sales_transactions' }), value: stats?.totalSalesTransactions || 0, icon: TrendingUp, color: '#008200', trend: '+5.3%', type: intl.formatMessage({ id: 'dashboard.transactions' }) },
+                    { label: intl.formatMessage({ id: 'dashboard.system_health' }), value: '100%', icon: ShieldCheck, color: '#D71921', trend: intl.formatMessage({ id: 'dashboard.verified' }), type: intl.formatMessage({ id: 'dashboard.kpi_status' }) }
+                  ].map((kpi, i) => (
+                    <motion.div
+                      key={kpi.label}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: i * 0.1 }}
+                      className="group p-6 rounded-lg bg-white border border-slate-200 hover:border-green-600/30 transition-all shadow-sm hover:shadow-xl hover:shadow-green-900/5 relative overflow-hidden"
+                    >
+                      <div className="absolute top-0 right-0 w-16 h-16 bg-slate-50 flex items-center justify-center rounded-bl-xl border-l border-b border-slate-100">
+                        <kpi.icon className="w-6 h-6" style={{ color: kpi.color }} />
+                      </div>
+                      <div className="space-y-2">
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{kpi.type}</p>
+                        <h3 className="text-3xl font-extrabold text-slate-900">
+                          {typeof kpi.value === 'number' ? kpi.value.toLocaleString() : kpi.value}
+                        </h3>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-bold text-slate-800">{kpi.label}</span>
+                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${kpi.trend === 'Optimal' || kpi.trend === 'Verified' || kpi.trend.includes('optimal') || kpi.trend.includes('Verified') ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}`}>
+                            {kpi.trend}
+                          </span>
                         </div>
                       </div>
-                      
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-px bg-slate-100 border border-slate-200 rounded-lg overflow-hidden shadow-sm">
-                        {materialData.length > 0 ? (
-                          materialData.map((material, idx) => (
-                            <motion.div 
-                              key={idx}
+                    </motion.div>
+                  ))}
+                </div>
+
+                {/* Main Content Grid */}
+                <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+                  {/* Inventory Overview */}
+                  <div className="lg:col-span-3 p-8 rounded-xl bg-white border border-slate-200 shadow-sm">
+                    <div className="flex items-center justify-between mb-6">
+                      <div>
+                        <h3 className="text-lg font-black text-slate-900">{intl.formatMessage({ id: 'dashboard.all_materials' })}</h3>
+                        <p className="text-xs text-slate-500 font-medium mt-1 uppercase tracking-tighter">
+                          {intl.formatMessage({ id: 'dashboard.total_materials' })} {materialData.length}
+                        </p>
+                      </div>
+                      <div
+                        className="p-3 rounded-lg bg-green-600 text-white shadow-lg shadow-green-900/20 hover:bg-green-700 transition-all cursor-pointer"
+                        onClick={handleExportExcel}
+                      >
+                        <Download className="w-5 h-5" />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-px bg-slate-100 border border-slate-200 rounded-lg overflow-hidden shadow-sm">
+                      {materialData.length > 0 ? (
+                        materialData.map((material, idx) => (
+                          <motion.div
+                            key={idx}
+                            initial="initial"
+                            whileHover="hover"
+                            variants={{
+                              initial: { borderRadius: '8px' },
+                              hover: { borderRadius: '24px', scale: 1.02, y: -2 }
+                            }}
+                            className="bg-white p-5 transition-colors flex flex-col justify-between h-36 group relative overflow-hidden"
+                          >
+                            {/* Background Shimmer Effect */}
+                            <motion.div
+                              variants={{
+                                hover: { x: ['-100%', '200%'] }
+                              }}
+                              transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+                              className="absolute inset-0 w-1/2 h-full skew-x-[-20deg] bg-gradient-to-r from-transparent via-white/40 to-transparent pointer-events-none z-10"
+                            />
+
+                            {/* Hover Glow Detail */}
+                            <motion.div
+                              variants={{
+                                hover: { opacity: 0.08, scale: 1 }
+                              }}
+                              initial={{ opacity: 0, scale: 0.8 }}
+                              className="absolute -right-4 -bottom-4 w-32 h-32 rounded-full blur-[40px] pointer-events-none z-0"
+                              style={{ backgroundColor: material.color || '#008200' }}
+                            />
+
+                            <div className="flex justify-between items-start relative z-20">
+                              <span className="text-[8px] font-bold text-slate-500 uppercase leading-tight tracking-tight line-clamp-1 max-w-[80%]">{material.description}</span>
+                              <motion.div
+                                variants={{
+                                  hover: { rotate: 90, scale: 1.2 }
+                                }}
+                                className="flex items-center gap-1.5"
+                              >
+                                <span className="w-2.5 h-2.5 rounded-sm shadow-sm" style={{ backgroundColor: material.color || '#008200' }} />
+                              </motion.div>
+                            </div>
+
+                            <div className="mt-2 relative z-20">
+                              <motion.h4
+                                variants={{
+                                  hover: { x: 2, color: material.color || '#008200' }
+                                }}
+                                className="text-[11px] font-black text-slate-700 leading-tight uppercase tracking-tight line-clamp-2 transition-colors duration-300"
+                              >
+                                {material.code}
+                              </motion.h4>
+                            </div>
+
+                            <div className="mt-auto pt-3 flex items-end justify-between border-t border-slate-50 relative z-20">
+                              <motion.div
+                                variants={{
+                                  hover: { scale: 1.05, x: 2 }
+                                }}
+                                className="flex items-baseline gap-1"
+                              >
+                                <span className="text-2xl font-black text-slate-900 leading-none tabular-nums tracking-tighter">{material.value ?? 0}</span>
+                                <span className="text-[8px] font-extrabold text-slate-400 uppercase tracking-tighter">{intl.formatMessage({ id: 'dashboard.units' })}</span>
+                              </motion.div>
+                              <motion.div
+                                variants={{
+                                  hover: { opacity: 1, x: 0, scale: 1 }
+                                }}
+                                initial={{ opacity: 0, x: -10, scale: 0.8 }}
+                                className="w-8 h-8 rounded-lg bg-slate-900 flex items-center justify-center shadow-lg"
+                              >
+                                <ArrowRightLeft className="w-3.5 h-3.5 text-white" />
+                              </motion.div>
+                            </div>
+                          </motion.div>
+                        ))
+                          .concat(
+                            <motion.div
+                              key="total-card"
                               initial="initial"
                               whileHover="hover"
                               variants={{
                                 initial: { borderRadius: '8px' },
                                 hover: { borderRadius: '24px', scale: 1.02, y: -2 }
                               }}
-                              className="bg-white p-5 transition-colors flex flex-col justify-between h-36 group relative overflow-hidden"
+                              className="bg-gradient-to-br from-[#008200] to-green-900 border-none p-5 transition-shadow flex flex-col justify-between h-36 group shadow-xl shadow-green-900/20"
                             >
-                              {/* Background Shimmer Effect */}
-                              <motion.div 
-                                variants={{
-                                  hover: { x: ['-100%', '200%'] }
-                                }}
-                                transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
-                                className="absolute inset-0 w-1/2 h-full skew-x-[-20deg] bg-gradient-to-r from-transparent via-white/40 to-transparent pointer-events-none z-10"
-                              />
-
-                              {/* Hover Glow Detail */}
-                              <motion.div 
-                                variants={{
-                                  hover: { opacity: 0.08, scale: 1 }
-                                }}
-                                initial={{ opacity: 0, scale: 0.8 }}
-                                className="absolute -right-4 -bottom-4 w-32 h-32 rounded-full blur-[40px] pointer-events-none z-0"
-                                style={{ backgroundColor: material.color || '#008200' }}
-                              />
-
-                              <div className="flex justify-between items-start relative z-20">
-                                <span className="text-[8px] font-bold text-slate-500 uppercase leading-tight tracking-tight line-clamp-1 max-w-[80%]">{material.description}</span>
-                                <motion.div 
-                                  variants={{
-                                    hover: { rotate: 90, scale: 1.2 }
-                                  }}
-                                  className="flex items-center gap-1.5"
-                                >
-                                  <span className="w-2.5 h-2.5 rounded-sm shadow-sm" style={{ backgroundColor: material.color || '#008200' }} />
-                                </motion.div>
+                              <div className="relative z-20">
+                                <span className="text-[10px] font-black text-green-100 uppercase tracking-[0.15em] block">GRAND TOTAL</span>
+                                <h4 className="text-sm font-black text-white mt-1 uppercase tracking-tight">BRARUDI S.A.</h4>
                               </div>
-                              
-                              <div className="mt-2 relative z-20">
-                                <motion.h4 
-                                  variants={{
-                                    hover: { x: 2, color: material.color || '#008200' }
-                                  }}
-                                  className="text-[11px] font-black text-slate-700 leading-tight uppercase tracking-tight line-clamp-2 transition-colors duration-300"
-                                >
-                                  {material.code}
-                                </motion.h4>
-                              </div>
-                              
-                              <div className="mt-auto pt-3 flex items-end justify-between border-t border-slate-50 relative z-20">
-                                <motion.div 
-                                  variants={{
-                                    hover: { scale: 1.05, x: 2 }
-                                  }}
-                                  className="flex items-baseline gap-1"
-                                >
-                                  <span className="text-2xl font-black text-slate-900 leading-none tabular-nums tracking-tighter">{material.value ?? 0}</span>
-                                  <span className="text-[8px] font-extrabold text-slate-400 uppercase tracking-tighter">{intl.formatMessage({ id: 'dashboard.units' })}</span>
-                                </motion.div>
-                                <motion.div 
-                                  variants={{
-                                    hover: { opacity: 1, x: 0, scale: 1 }
-                                  }}
-                                  initial={{ opacity: 0, x: -10, scale: 0.8 }}
-                                  className="w-8 h-8 rounded-lg bg-slate-900 flex items-center justify-center shadow-lg"
-                                >
-                                  <ArrowRightLeft className="w-3.5 h-3.5 text-white" />
-                                </motion.div>
+                              <div className="mt-auto pt-3 flex items-center justify-between border-t border-green-500/30 relative z-20 gap-2">
+                                <div className="flex items-baseline gap-1">
+                                  <span className="text-2xl 2xl:text-3xl font-black text-white leading-none tabular-nums tracking-tighter drop-shadow-md">
+                                    {materialData.reduce((acc, curr) => acc + (curr.value || 0), 0)}
+                                  </span>
+                                  <span className="text-[9px] font-extrabold text-green-100 uppercase tracking-tighter shrink-0">UNITÉS</span>
+                                </div>
+                                <div className="w-8 h-8 shrink-0 rounded-lg bg-white/20 backdrop-blur-sm flex items-center justify-center border border-white/20 shadow-sm">
+                                  <Layers className="w-4 h-4 text-white" />
+                                </div>
                               </div>
                             </motion.div>
-                          ))
-                        ) : (
-                          <div className="col-span-full h-40 bg-white flex items-center justify-center text-slate-400 text-xs font-bold uppercase tracking-widest italic">
-                            {intl.formatMessage({ id: 'inventory.no_data' })}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Status Card */}
-                    <div className="lg:col-span-1 p-8 rounded-2xl bg-gradient-to-br from-green-600 to-emerald-700 shadow-xl shadow-green-900/10 text-white flex flex-col justify-between relative overflow-hidden">
-                      <Star className="absolute -top-10 -right-10 w-40 h-40 text-white/10 rotate-12" />
-                      <div className="absolute -top-20 -right-20 w-40 h-40 bg-white/10 rounded-full blur-3xl" />
-                      <div className="relative z-10">
-                        <div className="flex items-center gap-2 mb-4">
-                          <ShieldCheck className="w-5 h-5 text-green-200" />
-                          <span className="text-[10px] font-black uppercase tracking-[0.2em] opacity-90">{intl.formatMessage({ id: 'dashboard.system_health' })}</span>
-                        </div>
-                        <h4 className="text-2xl font-black leading-tight">{intl.formatMessage({ id: 'dashboard.inventory_up_to_date' })}</h4>
-                        <p className="text-sm mt-4 text-green-50/90 leading-relaxed font-medium">{intl.formatMessage({ id: 'dashboard.all_stocks_synchronized' })}</p>
-                      </div>
-                      <div className="mt-8 relative z-10">
-                        <button className="w-full py-3 bg-white text-green-700 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-green-50 transition-all shadow-lg">
-                          {intl.formatMessage({ id: 'dashboard.view_detailed_report' })}
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Additional Charts */}
-                  <div>
-                    <h3 className="text-[10px] font-extrabold text-slate-400 uppercase tracking-[0.2em] mb-4">
-                      {intl.formatMessage({ id: 'dashboard.stock_distribution' })}
-                    </h3>
-                    <div className="p-8 rounded-xl bg-white border border-slate-200 shadow-sm">
-                      {materialData.length > 0 ? (
-                        <ResponsiveContainer width="100%" height={300}>
-                          <BarChart data={materialData}>
-                            <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" />
-                            <XAxis dataKey="code" tick={{ fontSize: 12, fill: '#64748B' }} />
-                            <YAxis tick={{ fontSize: 12, fill: '#64748B' }} />
-                            <Tooltip contentStyle={{ backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0' }} />
-                            <Bar dataKey="value" radius={[8, 8, 0, 0]}>
-                              {materialData.map((_, index) => (
-                                <Cell key={`cell-${index}`} fill={index % 2 === 0 ? '#008200' : '#D71921'} />
-                              ))}
-                            </Bar>
-                          </BarChart>
-                        </ResponsiveContainer>
+                          )
                       ) : (
-                        <div className="h-[300px] flex items-center justify-center text-slate-400">
+                        <div className="col-span-full h-40 bg-white flex items-center justify-center text-slate-400 text-xs font-bold uppercase tracking-widest italic">
                           {intl.formatMessage({ id: 'inventory.no_data' })}
                         </div>
                       )}
                     </div>
                   </div>
 
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </main>
+                  {/* Status Card */}
+                  <div className="lg:col-span-1 p-8 rounded-2xl bg-gradient-to-br from-green-600 to-emerald-700 shadow-xl shadow-green-900/10 text-white flex flex-col justify-between relative overflow-hidden">
+                    <Star className="absolute -top-10 -right-10 w-40 h-40 text-white/10 rotate-12" />
+                    <div className="absolute -top-20 -right-20 w-40 h-40 bg-white/10 rounded-full blur-3xl" />
+                    <div className="relative z-10">
+                      <div className="flex items-center gap-2 mb-4">
+                        <ShieldCheck className="w-5 h-5 text-green-200" />
+                        <span className="text-[10px] font-black uppercase tracking-[0.2em] opacity-90">{intl.formatMessage({ id: 'dashboard.system_health' })}</span>
+                      </div>
+                      <h4 className="text-2xl font-black leading-tight">{intl.formatMessage({ id: 'dashboard.inventory_up_to_date' })}</h4>
+                      <p className="text-sm mt-4 text-green-50/90 leading-relaxed font-medium">{intl.formatMessage({ id: 'dashboard.all_stocks_synchronized' })}</p>
+                    </div>
+                    <div className="mt-8 relative z-10">
+                      <button className="w-full py-3 bg-white text-green-700 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-green-50 transition-all shadow-lg">
+                        {intl.formatMessage({ id: 'dashboard.view_detailed_report' })}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Additional Charts */}
+                <div>
+                  <h3 className="text-[10px] font-extrabold text-slate-400 uppercase tracking-[0.2em] mb-4">
+                    {intl.formatMessage({ id: 'dashboard.stock_distribution' })}
+                  </h3>
+                  <div className="p-8 rounded-xl bg-white border border-slate-200 shadow-sm">
+                    {materialData.length > 0 ? (
+                      (() => {
+                        const totalValue = materialData.reduce((acc, curr) => acc + (curr.value || 0), 0);
+                        const chartData = [...materialData, { code: 'TOTAL', value: totalValue, isTotal: true }];
+
+                        return (
+                          <>
+                            <ResponsiveContainer width="100%" height={300}>
+                              <BarChart data={chartData}>
+                                <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" />
+                                <XAxis dataKey="code" tick={{ fontSize: 12, fill: '#64748B' }} />
+                                <YAxis tick={{ fontSize: 12, fill: '#64748B' }} />
+                                <Tooltip contentStyle={{ backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0' }} />
+                                <Bar dataKey="value" radius={[8, 8, 0, 0]}>
+                                  {chartData.map((entry, index) => (
+                                    <Cell key={`cell-${index}`} fill={entry.isTotal ? '#0F172A' : (index % 2 === 0 ? '#008200' : '#D71921')} />
+                                  ))}
+                                </Bar>
+                              </BarChart>
+                            </ResponsiveContainer>
+                            {/* Total shown at the downside of the chart */}
+                            <div className="mt-6 pt-4 border-t border-slate-100 flex justify-end items-center">
+                              <span className="text-[10px] font-black text-slate-400 mr-3 uppercase tracking-widest">TOTAL INVENTORY:</span>
+                              <span className="text-2xl font-black text-slate-800 tabular-nums">
+                                {totalValue} <span className="text-sm text-slate-400 ml-1">UNITÉS</span>
+                              </span>
+                            </div>
+                          </>
+                        );
+                      })()
+                    ) : (
+                      <div className="h-[300px] flex items-center justify-center text-slate-400">
+                        {intl.formatMessage({ id: 'inventory.no_data' })}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </main>
 
 
         {/* Footer */}
@@ -542,10 +586,10 @@ export function Dashboard() {
         </div>
 
         <div>
-           <h3 className="text-[10px] font-extrabold text-slate-400 uppercase tracking-[0.2em] mb-4">
-              {intl.formatMessage({ id: 'dashboard.stock_distribution' })}
-           </h3>
-           <MaterialMetrics />
+          <h3 className="text-[10px] font-extrabold text-slate-400 uppercase tracking-[0.2em] mb-4">
+            {intl.formatMessage({ id: 'dashboard.stock_distribution' })}
+          </h3>
+          <MaterialMetrics />
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">

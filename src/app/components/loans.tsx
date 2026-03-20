@@ -32,7 +32,7 @@ interface CartItem {
   quantity: number;
 }
 
-type TabKey = 'myRequests' | 'incoming' | 'approved' | 'denied';
+type TabKey = 'myRequests' | 'incoming' | 'approved' | 'denied' | 'extSent' | 'extReturned';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 function StatusBadge({ status }: { status: string }) {
@@ -105,6 +105,8 @@ export function Loans() {
   const [incomingPending, setIncomingPending] = useState<any[]>([]);
   const [approvedByMe, setApprovedByMe] = useState<any[]>([]);
   const [deniedByMe, setDeniedByMe] = useState<any[]>([]);
+  const [extSentItems, setExtSentItems] = useState<LoanItem[]>([]);
+  const [extReturnedItems, setExtReturnedItems] = useState<LoanItem[]>([]);
 
   // Transfer request form
   const [formData, setFormData] = useState({
@@ -184,8 +186,8 @@ export function Loans() {
         const product = materialAlias ? `${materialAlias}${materialDesc ? ' - ' + materialDesc : ''}` : 'Unknown Product';
 
         // Correctly identify the partner based on perspective
-        // External transfers might have a manual name in external_partner_name
-        const loan_partner_name = loan.external_partner_name || (perspective === 'outgoing'
+        // External transfers might have a manual name in external_party_name
+        const loan_partner_name = loan.external_party_name || loan.external_partner_name || (perspective === 'outgoing'
           ? (loan?.lender?.business_partner_name || loan?.borrower?.business_partner_name)
           : (loan?.borrower?.business_partner_name || loan?.lender?.business_partner_name));
 
@@ -199,14 +201,14 @@ export function Loans() {
 
       // ① My Requests — loans initiated as borrower
       const myReqs = loanList
-        .filter(l => String(l.bp_loaned_to_business_partner_key) === uid)
+        .filter(l => !l.external_party_name && String(l.bp_loaned_to_business_partner_key) === uid)
         .map((l, i) => toItem(l, i, 'outgoing'));
 
       // ② Incoming Requests — others requested from me as lender (or any lender in Global View), still PENDING
       const incoming = loanList
         .filter(l => {
           const isMatch = String(l.business_partner_key) === uid;
-          return l.bp_loan_status === 'pending' && isMatch;
+          return !l.external_party_name && l.bp_loan_status === 'pending' && isMatch;
         })
         .map((l, i) => toItem(l, i, 'incoming'));
 
@@ -214,7 +216,7 @@ export function Loans() {
       const approved = loanList
         .filter(l => {
           const isMatch = String(l.business_partner_key) === uid;
-          return (l.bp_loan_status === 'open' || l.bp_loan_status === 'active') && isMatch;
+          return !l.external_party_name && (l.bp_loan_status === 'open' || l.bp_loan_status === 'active') && isMatch;
         })
         .map((l, i) => toItem(l, i, 'incoming'));
 
@@ -222,9 +224,25 @@ export function Loans() {
       const denied = loanList
         .filter(l => {
           const isMatch = String(l.business_partner_key) === uid;
-          return l.bp_loan_status === 'cancelled' && isMatch;
+          return !l.external_party_name && l.bp_loan_status === 'cancelled' && isMatch;
         })
         .map((l, i) => toItem(l, i, 'incoming'));
+
+      // ⑤ External Sent / Active
+      const extSent = loanList
+        .filter(l => {
+          const isMatch = String(l.business_partner_key) === uid || String(l.bp_loaned_to_business_partner_key) === uid;
+          return !!l.external_party_name && (l.bp_loan_status === 'open' || l.bp_loan_status === 'active') && isMatch;
+        })
+        .map((l, i) => toItem(l, i, 'outgoing'));
+
+      // ⑥ External Returned / Closed
+      const extRet = loanList
+        .filter(l => {
+          const isMatch = String(l.business_partner_key) === uid || String(l.bp_loaned_to_business_partner_key) === uid;
+          return !!l.external_party_name && l.bp_loan_status === 'closed' && isMatch;
+        })
+        .map((l, i) => toItem(l, i, 'outgoing'));
 
       // ADD PENDING SYNC ITEMS
       const pendingRequests = getPendingByEndpoint('/loans');
@@ -249,6 +267,8 @@ export function Loans() {
       setIncomingPending(incoming);
       setApprovedByMe(approved);
       setDeniedByMe(denied);
+      setExtSentItems(extSent);
+      setExtReturnedItems(extRet);
     } catch (error) {
       console.error('Failed to fetch loans:', error);
       // Even if fetch fails, show the pending items
@@ -276,7 +296,7 @@ export function Loans() {
     let returnQty: number | undefined = undefined;
 
     if (status === 'closed') {
-      const loan = [...myRequests, ...incomingPending, ...approvedByMe].find(l => l.id === loanId);
+      const loan = [...myRequests, ...incomingPending, ...approvedByMe, ...extSentItems].find(l => l.id === loanId);
       const maxQty = loan ? loan.quantity : 100;
 
       const result = await Swal.fire({
@@ -396,18 +416,30 @@ export function Loans() {
   const fetchPartners = async () => {
     setLoadingPartners(true);
     try {
-      const res = await apiRequest('/user/list?limit=1000&offset=0');
+      const [res, extRes] = await Promise.all([
+        apiRequest('/user/list?limit=1000&offset=0'),
+        apiRequest('/external-distributors').catch(() => ({ result: [] }))
+      ]);
+      
       let list: any[] = res?.result?.users || res?.result?.rows || (Array.isArray(res?.result) ? res.result : []);
-      setPartners(
-        list
-          .filter(p => p && String(p.business_partner_key || p.id) !== String(currentUser?.id))
-          .map(p => ({
-            id: p.business_partner_key || p.id,
-            name: p.business_partner_name || p.name || 'Unknown',
-            type: p.customer_channel || p.business_partner_type || ''
-          }))
-          .filter(p => p.id)
-      );
+      let extList: any[] = Array.isArray(extRes?.result) ? extRes.result : [];
+
+      const internalPartners = list
+        .filter(p => p && String(p.business_partner_key || p.id) !== String(currentUser?.id))
+        .map(p => ({
+          id: String(p.business_partner_key || p.id),
+          name: p.business_partner_name || p.name || 'Unknown',
+          type: p.customer_channel || p.business_partner_type || ''
+        }))
+        .filter(p => p.id);
+
+      const externalPartners = extList.map(p => ({
+        id: `ext_${p.id}`,
+        name: p.name,
+        type: 'external_distributor'
+      }));
+
+      setPartners([...internalPartners, ...externalPartners]);
     } catch { setPartners([]); } finally { setLoadingPartners(false); }
   };
 
@@ -499,8 +531,8 @@ export function Loans() {
           }
         };
 
-        if (transferType === 'external' && destinationType === 'pdv') {
-          payload.external_partner_name = manualPartnerName;
+        if (transferType === 'external') {
+          payload.external_party_name = destinationType === 'pdv' ? manualPartnerName : selectedPartnerName;
         } else {
           payload.business_partner_key = parseInt(formData.business_partner_key);
         }
@@ -552,6 +584,8 @@ export function Loans() {
     { key: 'incoming', label: intl.formatMessage({ id: 'loans.incoming_requests' }), icon: <Bell className="w-4 h-4" />, count: incomingPending.length, badgeColor: 'bg-red-500' },
     { key: 'approved', label: intl.formatMessage({ id: 'sidebar.approved_requests' }), icon: <CheckCheck className="w-4 h-4" />, count: approvedByMe.length, badgeColor: 'bg-blue-500' },
     { key: 'denied', label: intl.formatMessage({ id: 'sidebar.denied_requests' }), icon: <XCircle className="w-4 h-4" />, count: deniedByMe.length, badgeColor: 'bg-red-400' },
+    { key: 'extSent', label: 'External Active', icon: <ArrowRightLeft className="w-4 h-4" />, count: extSentItems.length, badgeColor: 'bg-emerald-500' },
+    { key: 'extReturned', label: 'External Returned', icon: <RefreshCw className="w-4 h-4" />, count: extReturnedItems.length, badgeColor: 'bg-slate-400' },
   ];
 
   // ── Pagination helper ───────────────────────────────────────────────────────
@@ -642,7 +676,7 @@ export function Loans() {
                     </td>
                   )}
                   
-                  {type === 'approved' && (item.status === 'OPEN' || item.status === 'ACTIVE') && (
+                  {(type === 'approved' || type === 'extSent') && (item.status === 'OPEN' || item.status === 'ACTIVE') && (
                     <td className="py-3 px-4">
                       <button
                         disabled={updatingStatus !== null}
@@ -657,7 +691,7 @@ export function Loans() {
                   )}
 
                   {/* Empty cell for other states to maintain layout */}
-                  {((type !== 'incoming' && (type !== 'approved' || (item.status !== 'OPEN' && item.status !== 'ACTIVE'))) || (type === 'incoming' && item.status !== 'PENDING')) && <td className="py-3 px-4"></td>}
+                  {((type !== 'incoming' && ((type !== 'approved' && type !== 'extSent') || (item.status !== 'OPEN' && item.status !== 'ACTIVE'))) || (type === 'incoming' && item.status !== 'PENDING')) && <td className="py-3 px-4"></td>}
                 </tr>
               ))}
             </tbody>
@@ -763,6 +797,8 @@ export function Loans() {
               {activeTab === 'incoming' && <LoanTable items={incomingPending} emptyMsg={intl.formatMessage({ id: selectedPartner ? 'loans.incoming_empty_user' : 'loans.incoming_empty_sys' })} sub={selectedPartner ? intl.formatMessage({ id: 'loans.incoming_no_approval' }) : ""} type="incoming" />}
               {activeTab === 'approved' && <LoanTable items={approvedByMe} emptyMsg={intl.formatMessage({ id: 'loans.approved_empty' })} type="approved" />}
               {activeTab === 'denied' && <LoanTable items={deniedByMe} emptyMsg={intl.formatMessage({ id: 'loans.denied_empty' })} type="denied" />}
+              {activeTab === 'extSent' && <LoanTable items={extSentItems} emptyMsg={'Aucun retour externe en attente'} type="extSent" />}
+              {activeTab === 'extReturned' && <LoanTable items={extReturnedItems} emptyMsg={'Aucun historique de retour externe'} type="extReturned" />}
             </>
           )}
         </CardContent>
@@ -882,7 +918,9 @@ export function Loans() {
                           {partners
                             .filter(p => {
                               if (transferType === 'external' && destinationType === 'distributor') {
-                                return p.type.toLowerCase() === 'distributor';
+                                return p.type === 'external_distributor';
+                              } else if (transferType === 'internal') {
+                                return p.type !== 'external_distributor';
                               }
                               return true;
                             })
@@ -910,7 +948,9 @@ export function Loans() {
                           {partners
                             .filter(p => {
                               if (transferType === 'external' && destinationType === 'distributor') {
-                                return p.type.toLowerCase() === 'distributor';
+                                return p.type === 'external_distributor';
+                              } else if (transferType === 'internal') {
+                                return p.type !== 'external_distributor';
                               }
                               return true;
                             })
