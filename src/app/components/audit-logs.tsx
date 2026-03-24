@@ -45,7 +45,9 @@ const AuditLogs: React.FC = () => {
   useEffect(() => {
     const init = async () => {
       const regionList = await dashboardService.getRegions();
-      setRegions(regionList);
+      // Ensure unique regions to avoid key warnings
+      const uniqueRegions = Array.from(new Set(regionList));
+      setRegions(uniqueRegions);
       
       const userResp = await dashboardService.getUsersList({ limit: 1000 });
       setPartners(userResp.users || []);
@@ -155,8 +157,8 @@ const AuditLogs: React.FC = () => {
               className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all"
             >
               <option value="">All Users</option>
-              {partners.map(p => (
-                <option key={p.business_partner_key} value={p.business_partner_key}>
+              {partners.map((p, idx) => (
+                <option key={`partner-${p.business_partner_key || idx}-${idx}`} value={p.business_partner_key}>
                   {p.business_partner_name}
                 </option>
               ))}
@@ -173,8 +175,8 @@ const AuditLogs: React.FC = () => {
               className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all"
             >
               <option value="">All Regions</option>
-              {regions.map(r => (
-                <option key={r} value={r}>{r}</option>
+              {regions.map((r, idx) => (
+                <option key={`region-${r}-${idx}`} value={r}>{r}</option>
               ))}
             </select>
           </div>
@@ -225,8 +227,8 @@ const AuditLogs: React.FC = () => {
                   </td>
                 </tr>
               ) : (
-                logs.map((log) => (
-                  <tr key={log.audit_id} className="hover:bg-slate-50/50 transition-colors group">
+                logs.map((log, idx) => (
+                  <tr key={`${log.audit_id}-${idx}`} className="hover:bg-slate-50/50 transition-colors group">
                     <td className="px-5 py-3 whitespace-nowrap">
                       <div className="flex flex-col">
                         <span className="text-[13px] font-medium text-slate-600">

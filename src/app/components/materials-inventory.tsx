@@ -122,7 +122,8 @@ export function MaterialsInventory() {
         color: '#f59e0b'
       }
     ],
-    credits: { enabled: false }
+    credits: { enabled: false },
+    accessibility: { enabled: false }
   };
 
   return (

@@ -515,14 +515,14 @@ export function BrarudiUserList() {
       {/* Modals remain mostly the same but with style tweaks for consistency */}
       {showCreateModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <Card className="w-full max-w-md shadow-2xl">
-            <CardHeader className="py-4 border-b border-slate-50">
+          <Card className="w-full max-w-md shadow-2xl gap-0">
+            <CardHeader className="pt-4 pb-2 border-b border-slate-50">
               <CardTitle className="flex items-center gap-2 text-slate-800 font-normal text-lg">
                 <Plus className="w-5 h-5 text-emerald-500" />
                 {intl.formatMessage({ id: 'users.create_title' })}
               </CardTitle>
             </CardHeader>
-            <CardContent className="pt-4">
+            <CardContent className="pt-2">
               <form onSubmit={async (e) => {
                 e.preventDefault();
                 setCreateLoading(true);
@@ -606,14 +606,14 @@ export function BrarudiUserList() {
       {/* Edit Modal */}
       {showEditModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <Card className="w-full max-w-md shadow-2xl">
-            <CardHeader className="py-4 border-b border-slate-50">
+          <Card className="w-full max-w-md shadow-2xl gap-0">
+            <CardHeader className="pt-4 pb-2 border-b border-slate-50">
               <CardTitle className="flex items-center gap-2 text-slate-800 font-normal text-lg">
                 <Edit2 className="w-5 h-5 text-blue-500" />
                 {intl.formatMessage({ id: 'users.edit_title' })}
               </CardTitle>
             </CardHeader>
-            <CardContent className="pt-4">
+            <CardContent className="pt-2">
               <form onSubmit={async (e) => {
                 e.preventDefault();
                 setEditLoading(true);
@@ -708,14 +708,14 @@ export function BrarudiUserList() {
 
       {showResetModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <Card className="w-full max-w-md shadow-2xl">
-            <CardHeader className="py-4 border-b border-slate-50">
+          <Card className="w-full max-w-md shadow-2xl gap-0">
+            <CardHeader className="pt-4 pb-2 border-b border-slate-50">
               <CardTitle className="flex items-center gap-2 text-slate-800 font-normal text-lg">
                 <Key className="w-5 h-5 text-amber-500" />
                 {intl.formatMessage({ id: 'users.reset_password' })}
               </CardTitle>
             </CardHeader>
-            <CardContent className="pt-4">
+            <CardContent className="pt-2">
               <form onSubmit={handleResetPassword} className="space-y-4">
                 <div className="space-y-2">
                   <Label className="text-xs font-normal text-slate-500 uppercase">

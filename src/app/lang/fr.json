@@ -147,6 +147,7 @@
   "login.hero_subtitle": "Surveillez, analysez et optimisez vos mesures de production en temps réel.",
   "login.button": "Se connecter"
 ,
+  "dashboard.export_excel": "Exporter vers Excel",
   "inventory.adjust_reason_required": "Une raison d'audit est requise pour la conformité.",
   "inventory.adjust_confirm_title": "Confirmer les mises à jour ?",
   "inventory.adjust_confirm_title_add": "Confirmer l'ajout ?",
@@ -292,6 +293,7 @@
   "loans.no_action": "Aucune action disponible",
   "loans.status_pending_sync": "HORS-LIGNE (EN ATTENTE)",
   "sidebar.dashboard": "Tableau de bord",
+  "sidebar.main_dashboard": "Tableau Principal",
   "sidebar.regional_inventory": "Inventaire Régional",
   "sidebar.regional_loans": "Prêts Régionaux",
   "sidebar.users_list": "Liste des Utilisateurs",

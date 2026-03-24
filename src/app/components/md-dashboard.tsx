@@ -253,6 +253,9 @@ export function MDDashboard() {
     }],
     credits: {
       enabled: false
+    },
+    accessibility: {
+      enabled: false
     }
   };
 

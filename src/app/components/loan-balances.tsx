@@ -108,7 +108,8 @@ export function LoanBalances() {
       })),
       showInLegend: false
     }],
-    credits: { enabled: false }
+    credits: { enabled: false },
+    accessibility: { enabled: false }
   };
 
   return (

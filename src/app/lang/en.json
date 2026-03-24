@@ -147,6 +147,7 @@
   "login.hero_subtitle": "Monitor, analyze, and optimize your production metrics in real-time.",
   "login.button": "Sign In"
 ,
+  "dashboard.export_excel": "Export Excel",
   "inventory.adjust_reason_required": "An audit reason is required for compliance.",
    "inventory.adjust_confirm_title": "Confirm Stock updates?",
    "inventory.adjust_confirm_title_add": "Confirm Stock Add?",
@@ -292,6 +293,7 @@
   "loans.no_action": "No actions available",
   "loans.status_pending_sync": "OFFLINE (PENDING)",
   "sidebar.dashboard": "Dashboard",
+  "sidebar.main_dashboard": "Main Dashboard",
   "sidebar.regional_inventory": "Regional Inventory",
   "sidebar.regional_loans": "Regional Loans",
   "sidebar.users_list": "Users List",

@@ -72,6 +72,7 @@ export function InactiveUsers3DChart({ users }: Props) {
     },
     title: { text: undefined },
     credits: { enabled: false },
+    accessibility: { enabled: false },
     legend: { enabled: false },
     xAxis: {
       categories: chartData.map((d) => d.name),
