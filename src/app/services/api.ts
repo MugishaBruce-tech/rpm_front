@@ -46,7 +46,7 @@ export const apiRequest = async (endpoint: string, options: RequestInit = {}) =>
     }
 
     try {
-      const response = await fetch(url, { ...options, headers });
+      const response = await fetch(url, { ...options, headers, credentials: 'include' });
 
       if (response.status === 401 || response.status === 403) {
         const errorData = await response.json().catch(() => ({}));
@@ -100,7 +100,7 @@ export const apiRequest = async (endpoint: string, options: RequestInit = {}) =>
   }
 
   try {
-    const response = await fetch(url, { ...options, headers });
+    const response = await fetch(url, { ...options, headers, credentials: 'include' });
     
     if (response.status === 401 || response.status === 403) {
       const errorData = await response.json().catch(() => ({}));

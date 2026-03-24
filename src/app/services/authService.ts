@@ -7,9 +7,16 @@ export const authService = {
       body: JSON.stringify({ USER_AD: userAd, PASSWORD: password }),
     });
     
-    if (data.result && data.result.TOKEN) {
-      localStorage.setItem('rpm-tracker-auth-token', data.result.TOKEN);
-      localStorage.setItem('rpm-tracker-auth-refresh', data.result.REFRESH_TOKEN);
+    if (data.result) {
+      // If MFA is required, we don't have a user object yet, just return the MFA info
+      if (data.result.is_mfa_required) {
+        return data.result;
+      }
+
+      if (data.result.TOKEN) {
+        localStorage.setItem('rpm-tracker-auth-token', data.result.TOKEN);
+        localStorage.setItem('rpm-tracker-auth-refresh', data.result.REFRESH_TOKEN);
+      }
       
       const permissions = data.result.profil?.permissions?.map((p: any) => p.code) || [];
       
@@ -38,9 +45,11 @@ export const authService = {
       body: JSON.stringify({ token: otp, mfa_token: mfaToken }),
     });
 
-    if (data.result && data.result.TOKEN) {
-      localStorage.setItem('rpm-tracker-auth-token', data.result.TOKEN);
-      localStorage.setItem('rpm-tracker-auth-refresh', data.result.REFRESH_TOKEN);
+    if (data.result) {
+      if (data.result.TOKEN) {
+        localStorage.setItem('rpm-tracker-auth-token', data.result.TOKEN);
+        localStorage.setItem('rpm-tracker-auth-refresh', data.result.REFRESH_TOKEN);
+      }
       
       const permissions = data.result.profil?.permissions?.map((p: any) => p.code) || [];
       

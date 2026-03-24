@@ -74,20 +74,20 @@ export function OPCODashboard() {
 
       try {
         const statsKey = selectedPartner?.id;
-        
+
         // Build API params: 
         // - If "All Regions" explicitly selected (selectedRegion is null AND isOPCO), use global=true
         // - If specific region selected, use that region
         // - For DDM, use their locked region
         const useGlobalView = isOPCO && selectedRegion === null;
         const activeRegion = selectedRegion || (isDDM ? userRegion : undefined);
-        
-        const statsParams = statsKey 
+
+        const statsParams = statsKey
           ? { partnerKey: statsKey }
-          : useGlobalView 
+          : useGlobalView
             ? { global: true }
             : { region: activeRegion || undefined };
-            
+
         const distParams = statsKey
           ? { partnerKey: statsKey }
           : useGlobalView
@@ -121,16 +121,16 @@ export function OPCODashboard() {
         // When using global view or viewing a specific partner, use the API data directly
         // Otherwise filter by available partners in the current region
         let filteredDistribution = allDistribution;
-        
+
         if (!useGlobalView && !selectedPartner) {
           // Regional view without specific partner - filter by availablePartners
           const regionalPartnerIds = new Set(availablePartners.map(p => String(p.id)));
-          filteredDistribution = allDistribution.filter((d: any) => 
+          filteredDistribution = allDistribution.filter((d: any) =>
             regionalPartnerIds.has(String(d.partnerKey || d.partner_key || d.id))
           );
         } else if (selectedPartner) {
           // Specific partner selected
-          filteredDistribution = allDistribution.filter((d: any) => 
+          filteredDistribution = allDistribution.filter((d: any) =>
             String(d.partnerKey || d.partner_key || d.id) === String(selectedPartner.id)
           );
         }
@@ -154,14 +154,14 @@ export function OPCODashboard() {
             name: (m.code || 'Unknown').split(' ').slice(0, 2).join(' ').substring(0, 15),
             stock: Number(m.value || 0)
           }));
-        
+
         // Calculate total stock and add it to the chart data
         const totalMaterialStock = topMaterials.reduce((sum, m) => sum + m.stock, 0);
         const chartData = [
           ...topMaterials,
           { id: 'total', name: 'TOTAL', stock: totalMaterialStock }
         ];
-        
+
         // Heineken green color palette for visual interest
         const heinekeenGreens = [
           '#0b5219', // Dark green
@@ -176,7 +176,7 @@ export function OPCODashboard() {
           '#a6e3a1', // Pale green
           '#1b7a00'  // Extra dark for total
         ];
-        
+
         if (!isMounted) return;
         setMaterialData(chartData);
 
@@ -188,7 +188,7 @@ export function OPCODashboard() {
             inactive: inactiveByRegion[region] || 0
           }))
           .sort((a: any, b: any) => b.inactive - a.inactive);
-        
+
         if (!isMounted) return;
         setInactiveUsersData(inactiveChartData);
         setInactiveUsers(inactiveUsersResult?.users || []);
@@ -226,7 +226,7 @@ export function OPCODashboard() {
     };
 
     loadOpcoSpecifics();
-    
+
     return () => {
       isMounted = false;
     };
@@ -267,7 +267,7 @@ export function OPCODashboard() {
               extension: 'png',
             });
             worksheet.addImage(logoId, {
-              tl: { col: 5.15, row: 0.3 }, 
+              tl: { col: 5.15, row: 0.3 },
               ext: { width: 90, height: 75 }
             });
           } catch (e) {
@@ -278,7 +278,7 @@ export function OPCODashboard() {
           worksheet.mergeCells(`A${metaRow}:C${metaRow}`);
           worksheet.getCell(`A${metaRow}`).value = `Généré par: ${authService.getCurrentUser()?.name || 'Utilisateur'}`;
           worksheet.getCell(`A${metaRow}`).font = { bold: true, size: 11, color: { argb: 'FF1E293B' } };
-          
+
           worksheet.mergeCells(`D${metaRow}:F${metaRow}`);
           worksheet.getCell(`D${metaRow}`).value = `Date: ${new Date().toLocaleString()}`;
           worksheet.getCell(`D${metaRow}`).alignment = { horizontal: 'right' };
@@ -289,10 +289,10 @@ export function OPCODashboard() {
           canvas.width = 1000;
           canvas.height = 500;
           const ctx = canvas.getContext('2d')!;
-          
+
           ctx.fillStyle = '#FFFFFF';
           ctx.fillRect(0, 0, canvas.width, canvas.height);
-          
+
           const chartMaterials = materialData; // Use all data including TOTAL
           const totalItems = chartMaterials.length;
           const maxValue = Math.max(...chartMaterials.map(m => m.stock || 0), 10);
@@ -304,21 +304,21 @@ export function OPCODashboard() {
           chartMaterials.forEach((m, i) => {
             const h = ((m.stock || 0) / maxValue) * chartHeight;
             // Use special color for TOTAL
-            ctx.fillStyle = m.id === 'total' 
-              ? '#1b7a00' 
+            ctx.fillStyle = m.id === 'total'
+              ? '#1b7a00'
               : ['#0b5219', '#0f6438', '#168c17', '#20c997', '#25b900', '#37b24d', '#40c057', '#51cf66', '#69db7c', '#a6e3a1'][i % 10];
-            
+
             ctx.fillRect(startX + i * barWidth + 20, startY - h, barWidth - 40, h);
-            
+
             ctx.fillStyle = '#64748B';
             ctx.font = 'bold ' + (totalItems > 8 ? '12px' : '16px') + ' Arial';
             ctx.textAlign = 'center';
             const label = m.name.length > 15 ? m.name.substring(0, 12) + '...' : m.name;
-            ctx.fillText(label, startX + i * barWidth + (barWidth/2), startY + 40);
-            
+            ctx.fillText(label, startX + i * barWidth + (barWidth / 2), startY + 40);
+
             ctx.fillStyle = '#0F172A';
             ctx.font = 'bold ' + (totalItems > 8 ? '14px' : '18px') + ' Arial';
-            ctx.fillText(String(m.stock || 0), startX + i * barWidth + (barWidth/2), startY - h - 15);
+            ctx.fillText(String(m.stock || 0), startX + i * barWidth + (barWidth / 2), startY - h - 15);
           });
 
           const imageBase64 = canvas.toDataURL('image/png');
@@ -326,7 +326,7 @@ export function OPCODashboard() {
             base64: imageBase64,
             extension: 'png',
           });
-          
+
           worksheet.addImage(imageId, {
             tl: { col: 0.2, row: 7 },
             ext: { width: 700, height: 350 }
@@ -356,7 +356,7 @@ export function OPCODashboard() {
               (m.stock || 0) > 10 ? 'OK' : 'STOCK BAS'
             ];
             r.height = 20;
-            
+
             if (idx % 2 === 1) {
               r.eachCell(cell => {
                 cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF8FAFC' } };
@@ -364,11 +364,11 @@ export function OPCODashboard() {
             }
 
             r.eachCell((cell, colId) => {
-               cell.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } };
-               if (colId === 4) cell.font = { bold: true };
-               if (colId === 6) {
-                 cell.font = { bold: true, color: { argb: (m.stock || 0) > 10 ? 'FF008200' : 'FFD71921' } };
-               }
+              cell.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } };
+              if (colId === 4) cell.font = { bold: true };
+              if (colId === 6) {
+                cell.font = { bold: true, color: { argb: (m.stock || 0) > 10 ? 'FF008200' : 'FFD71921' } };
+              }
             });
           });
 
@@ -384,7 +384,7 @@ export function OPCODashboard() {
           const now = new Date();
           const timestamp = `${now.toISOString().split('T')[0]}_${now.getHours()}-${now.getMinutes()}`;
           saveAs(blob, `inventaire-rpm-${displayRegion.toLowerCase()}-${timestamp}.xlsx`);
-          
+
           resolve(true);
         } catch (err) {
           reject(err);
@@ -496,9 +496,9 @@ export function OPCODashboard() {
               </div>
               <div className="flex items-center gap-3">
                 <span className="text-[10px] font-bold text-slate-400 uppercase">
-                   {intl.formatMessage({ id: 'opco.crates_base_uom' })}
+                  {intl.formatMessage({ id: 'opco.crates_base_uom' })}
                 </span>
-                <button 
+                <button
                   onClick={handleExportExcel}
                   className="p-1.5 bg-white border border-slate-200 rounded hover:border-[#168c17] hover:text-[#168c17] transition-all"
                   title={intl.formatMessage({ id: 'dashboard.export_excel' })}
@@ -525,13 +525,13 @@ export function OPCODashboard() {
                   />
                   <Bar dataKey="stock" radius={[2, 2, 0, 0]} barSize={40}>
                     {materialData.map((entry: any, index: number) => (
-                      <Cell 
-                        key={`cell-${index}`} 
+                      <Cell
+                        key={`cell-${index}`}
                         fill={
-                          entry.id === 'total' 
+                          entry.id === 'total'
                             ? '#1b7a00'  // Extra dark green for total
                             : ['#0b5219', '#0f6438', '#168c17', '#20c997', '#25b900', '#37b24d', '#40c057', '#51cf66', '#69db7c', '#a6e3a1'][index % 10]
-                        } 
+                        }
                       />
                     ))}
                   </Bar>
@@ -642,7 +642,7 @@ export function OPCODashboard() {
                 {inactiveUsers.length || 0} Users
               </span>
             </div>
-            
+
             <CardContent className="p-4">
               {inactiveUsers && inactiveUsers.length > 0 ? (
                 <div className="space-y-3">
@@ -652,10 +652,10 @@ export function OPCODashboard() {
                       <BarChart
                         data={inactiveUsers.slice(0, 8).map((user: any) => {
                           const lastLogin = user.last_login_at ? new Date(user.last_login_at) : null;
-                          const hoursSinceLogin = lastLogin 
+                          const hoursSinceLogin = lastLogin
                             ? Math.floor((Date.now() - lastLogin.getTime()) / (1000 * 60 * 60))
                             : 999999;
-                          
+
                           return {
                             name: (user.business_partner_name || user.user_ad || 'Unknown').substring(0, 8),
                             hours: hoursSinceLogin > 998000 ? 750 : hoursSinceLogin,
@@ -667,14 +667,14 @@ export function OPCODashboard() {
                         margin={{ top: 10, right: 15, left: -20, bottom: 50 }}
                       >
                         <CartesianGrid strokeDasharray="3 2" vertical={false} stroke="#f0f0f0" />
-                        <XAxis 
-                          dataKey="name" 
+                        <XAxis
+                          dataKey="name"
                           tick={{ fontSize: 10, fill: '#64748b' }}
                           angle={-30}
                           textAnchor="end"
                           height={60}
                         />
-                        <YAxis 
+                        <YAxis
                           tick={{ fontSize: 9, fill: '#94a3b8' }}
                           strokeWidth={0}
                           width={30}
@@ -702,34 +702,34 @@ export function OPCODashboard() {
                         >
                           {inactiveUsers.slice(0, 8).map((user: any, idx: number) => {
                             const lastLogin = user.last_login_at ? new Date(user.last_login_at) : null;
-                            const hoursSinceLogin = lastLogin 
+                            const hoursSinceLogin = lastLogin
                               ? Math.floor((Date.now() - lastLogin.getTime()) / (1000 * 60 * 60))
                               : 999999;
-                            
+
                             let color = '#10b981';
                             if (hoursSinceLogin > 998000) color = '#992b1f';
                             else if (hoursSinceLogin > 720) color = '#c2410c';
                             else if (hoursSinceLogin > 24) color = '#d97706';
-                            
+
                             return <Cell key={idx} fill={color} opacity={0.8} />;
                           })}
                         </Bar>
                       </BarChart>
                     </ResponsiveContainer>
                   </div>
-                  
+
                   {/* Compact Details List */}
                   <div className="space-y-1.5 max-h-[240px] overflow-y-auto">
                     {inactiveUsers.slice(0, 8).map((user: any, idx: number) => {
                       const lastLogin = user.last_login_at ? new Date(user.last_login_at) : null;
-                      const hoursSinceLogin = lastLogin 
+                      const hoursSinceLogin = lastLogin
                         ? Math.floor((Date.now() - lastLogin.getTime()) / (1000 * 60 * 60))
                         : 999999;
-                      
+
                       let timeDisplay = 'Never logged in';
                       let bgColor = 'bg-red-50';
                       let textColor = 'text-red-600';
-                      
+
                       if (hoursSinceLogin < 998999) {
                         if (hoursSinceLogin > 720) {
                           timeDisplay = `${Math.round(hoursSinceLogin / 24)} days ago`;

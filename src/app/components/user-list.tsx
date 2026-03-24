@@ -12,7 +12,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Skeleton } from './ui/skeleton';
 import { ProtectedResource } from './ui/ProtectedResource';
-import { Plus, Users, Edit2, Trash, AlertCircle, ChevronLeft, ChevronRight, Save, History, Clock, MapPin, Monitor, Smartphone, Globe, Key } from 'lucide-react';
+import { Plus, Users, Edit2, Trash, AlertCircle, ChevronLeft, ChevronRight, Save, History, Clock, MapPin, Monitor, Smartphone, Globe, Key, Download } from 'lucide-react';
+import ExcelJS from 'exceljs';
+import { saveAs } from 'file-saver';
+import { authService } from '../services/authService';
+// @ts-ignore
+import headerImageLogo from '../../assets/logo3.png';
 
 export function UserList() {
   const intl = useIntl();
@@ -120,6 +125,84 @@ export function UserList() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleExportExcel = async () => {
+    try {
+      if (users.length === 0) {
+        toast.error(intl.formatMessage({ id: 'export.no_data' }) || 'No data to export');
+        return;
+      }
+
+      toast.promise(new Promise(async (resolve, reject) => {
+        try {
+          const workbook = new ExcelJS.Workbook();
+          const worksheet = workbook.addWorksheet('Users');
+
+          worksheet.mergeCells('A1:F4');
+          const titleCell = worksheet.getCell('A1');
+          titleCell.value = 'BRARUDI RPM TRACKER - LISTE DES UTILISATEURS';
+          titleCell.alignment = { horizontal: 'center', vertical: 'middle' };
+          titleCell.font = { name: 'Arial Black', size: 16, color: { argb: 'FFFFFFFF' } };
+          titleCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF008200' } };
+
+          try {
+            const logoRes = await fetch(headerImageLogo);
+            const logoBlob = await logoRes.blob();
+            const logoId = workbook.addImage({
+              buffer: await logoBlob.arrayBuffer(),
+              extension: 'png',
+            });
+            worksheet.addImage(logoId, { tl: { col: 5.2, row: 0.3 }, ext: { width: 90, height: 75 } });
+          } catch (e) { console.error(e); }
+
+          const metaRow = 6;
+          worksheet.getCell(`A${metaRow}`).value = `Généré par: ${authService.getCurrentUser()?.name || 'Utilisateur'} - ${new Date().toLocaleString()}`;
+          worksheet.getCell(`A${metaRow}`).font = { bold: true };
+
+          const startRow = 8;
+          const headerRow = worksheet.getRow(startRow);
+          headerRow.values = ['NO', 'NOM', 'USERNAME (AD)', 'REGION', 'TYPE', 'STATUT'];
+          headerRow.height = 25;
+          headerRow.eachCell(cell => {
+            cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+            cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1E293B' } };
+            cell.alignment = { horizontal: 'center' };
+          });
+
+          users.forEach((u, idx) => {
+            const row = worksheet.getRow(startRow + 1 + idx);
+            row.values = [
+              idx + 1,
+              u.business_partner_name,
+              u.user_ad,
+              u.region,
+              u.business_partner_type,
+              u.business_partner_status
+            ];
+            if (idx % 2 === 1) {
+              row.eachCell(c => c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF8FAFC' } });
+            }
+          });
+
+          worksheet.getColumn(1).width = 5;
+          worksheet.getColumn(2).width = 30;
+          worksheet.getColumn(3).width = 20;
+          worksheet.getColumn(4).width = 15;
+          worksheet.getColumn(5).width = 15;
+          worksheet.getColumn(6).width = 15;
+
+          const buffer = await workbook.xlsx.writeBuffer();
+          const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+          saveAs(blob, `rpm-users-${new Date().toISOString().split('T')[0]}.xlsx`);
+          resolve(true);
+        } catch (e) { reject(e); }
+      }), {
+        loading: 'Génération Excel...',
+        success: 'Succès !',
+        error: 'Échec.'
+      });
+    } catch (e) { console.error(e); }
   };
 
   const handleEditClick = (user: any) => {
@@ -240,25 +323,34 @@ export function UserList() {
         <CardHeader className="space-y-4">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <CardTitle>{intl.formatMessage({ id: 'users.title' })}</CardTitle>
-            <ProtectedResource action="USER_CREATE_REGION">
-              <Button
-                onClick={() => {
-                  setShowCreateModal(true);
-                  if (regions.length && !createFormData.region) {
-                    setCreateFormData(p => ({ ...p, region: regions[0] }));
-                  }
-                  if (businessPartnerTypes.length && !createFormData.business_partner_type) {
-                    setCreateFormData(p => ({ ...p, business_partner_type: businessPartnerTypes[0] }));
-                  }
-                }}
-                className="w-full sm:w-auto gap-2"
-                style={{ backgroundColor: primaryColor }}
-                title={intl.formatMessage({ id: 'users.add_new' })}
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <button
+                onClick={handleExportExcel}
+                className="inline-flex items-center justify-center p-2 rounded-lg border border-slate-200 bg-white text-slate-600 hover:text-green-700 hover:border-green-200 hover:bg-green-50 transition-all shadow-sm group"
+                title={intl.formatMessage({ id: 'dashboard.export_excel' })}
               >
-                <Plus className="w-4 h-4" />
-                <span className="hidden sm:inline">{intl.formatMessage({ id: 'users.add_new' })}</span>
-              </Button>
-            </ProtectedResource>
+                <Download className="w-5 h-5 group-hover:scale-110 transition-transform" />
+              </button>
+              <ProtectedResource action="USER_CREATE_REGION">
+                <Button
+                  onClick={() => {
+                    setShowCreateModal(true);
+                    if (regions.length && !createFormData.region) {
+                      setCreateFormData(p => ({ ...p, region: regions[0] }));
+                    }
+                    if (businessPartnerTypes.length && !createFormData.business_partner_type) {
+                      setCreateFormData(p => ({ ...p, business_partner_type: businessPartnerTypes[0] }));
+                    }
+                  }}
+                  className="w-full sm:w-auto gap-2"
+                  style={{ backgroundColor: primaryColor }}
+                  title={intl.formatMessage({ id: 'users.add_new' })}
+                >
+                  <Plus className="w-4 h-4" />
+                  <span className="hidden sm:inline">{intl.formatMessage({ id: 'users.add_new' })}</span>
+                </Button>
+              </ProtectedResource>
+            </div>
           </div>
         </CardHeader>
         <CardContent>

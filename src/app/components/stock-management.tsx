@@ -1,10 +1,11 @@
-import { Plus, Minus, Search, Edit, Trash2, Package, Layers, TrendingDown, AlertTriangle, X, WifiOff } from 'lucide-react';
+import { Plus, Minus, Search, Edit, Trash2, Package, Layers, TrendingDown, AlertTriangle, X, WifiOff, Download } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useIntl } from 'react-intl';
 import { toast } from 'sonner';
 import Swal from 'sweetalert2';
 import { usePrimaryColor } from '../hooks/usePrimaryColor';
 import { apiRequest } from '../services/api';
+import { authService } from '../services/authService';
 import { getPendingByEndpoint, addSyncListener, processQueue } from '../services/syncQueue';
 import { RefreshCw } from 'lucide-react';
 import { Button } from './ui/button';
@@ -15,6 +16,10 @@ import { PartnerSelector } from './ui/PartnerSelector';
 import { usePartnerContext } from '../contexts/PartnerContext';
 import { RegionSelector } from './ui/RegionSelector';
 import { ProtectedResource } from './ui/ProtectedResource';
+import ExcelJS from 'exceljs';
+import { saveAs } from 'file-saver';
+// @ts-ignore
+import headerImageLogo from '../../assets/logo3.png';
 
 interface StockItem {
   id?: number;
@@ -240,6 +245,83 @@ export function StockManagement() {
   // Pagination derived values
   const paginationTotal = filteredStock.length;
   const totalPages = Math.max(1, Math.ceil(paginationTotal / limit));
+
+  const handleExportExcel = async () => {
+    try {
+      if (filteredStock.length === 0) {
+        toast.error(intl.formatMessage({ id: 'export.no_data' }) || 'No data to export');
+        return;
+      }
+
+      toast.promise(new Promise(async (resolve, reject) => {
+        try {
+          const workbook = new ExcelJS.Workbook();
+          const worksheet = workbook.addWorksheet('Inventory');
+
+          worksheet.mergeCells('A1:E4');
+          const titleCell = worksheet.getCell('A1');
+          titleCell.value = 'BRARUDI RPM TRACKER - GESTION DES STOCKS';
+          titleCell.alignment = { horizontal: 'center', vertical: 'middle' };
+          titleCell.font = { name: 'Arial Black', size: 16, color: { argb: 'FFFFFFFF' } };
+          titleCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF008200' } };
+
+          try {
+            const logoRes = await fetch(headerImageLogo);
+            const logoBlob = await logoRes.blob();
+            const logoId = workbook.addImage({
+              buffer: await logoBlob.arrayBuffer(),
+              extension: 'png',
+            });
+            worksheet.addImage(logoId, { tl: { col: 4.2, row: 0.3 }, ext: { width: 90, height: 75 } });
+          } catch (e) { console.error(e); }
+
+          const metaRow = 6;
+          worksheet.getCell(`A${metaRow}`).value = `Généré par: ${authService.getCurrentUser()?.name || 'Utilisateur'} - ${new Date().toLocaleString()}`;
+          worksheet.getCell(`A${metaRow}`).font = { bold: true };
+
+          const startRow = 8;
+          const headerRow = worksheet.getRow(startRow);
+          headerRow.values = ['NO', 'SKU', 'PRODUIT', 'STOCK PHYSIQUE', 'STATUT'];
+          headerRow.height = 25;
+          headerRow.eachCell(cell => {
+            cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+            cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1E293B' } };
+            cell.alignment = { horizontal: 'center' };
+          });
+
+          filteredStock.forEach((item, idx) => {
+            const row = worksheet.getRow(startRow + 1 + idx);
+            row.values = [
+              idx + 1,
+              item.sku,
+              item.product,
+              item.physical,
+              item.status
+            ];
+            if (idx % 2 === 1) {
+              row.eachCell(c => c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF8FAFC' } });
+            }
+          });
+
+          worksheet.getColumn(1).width = 5;
+          worksheet.getColumn(2).width = 15;
+          worksheet.getColumn(3).width = 50;
+          worksheet.getColumn(4).width = 15;
+          worksheet.getColumn(5).width = 15;
+
+          const buffer = await workbook.xlsx.writeBuffer();
+          const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+          saveAs(blob, `rpm-stock-${new Date().toISOString().split('T')[0]}.xlsx`);
+          resolve(true);
+        } catch (e) { reject(e); }
+      }), {
+        loading: 'Génération Excel...',
+        success: 'Succès !',
+        error: 'Échec.'
+      });
+    } catch (e) { console.error(e); }
+  };
+
   const hasPreviousPage = page > 1;
   const hasNextPage = page < totalPages;
   const startIndex = paginationTotal === 0 ? 0 : (page - 1) * limit;
@@ -390,12 +472,21 @@ export function StockManagement() {
             <div className="flex w-full sm:w-auto items-center gap-4">
               <RegionSelector />
               <PartnerSelector />
-              <ProtectedResource action={['STOCK_ADJUST_GLOBAL', 'STOCK_EDIT_SELF']}>
-                <Button onClick={() => handleOpenModal('ADD')} className="flex-1 sm:flex-initial gap-2" style={{ backgroundColor: primaryColor }} title={intl.formatMessage({ id: 'inventory.add' })}>
-                  <Plus className="w-4 h-4 ml-1" />
-                  <span className="hidden sm:inline">{intl.formatMessage({ id: 'inventory.add' })}</span>
-                </Button>
-              </ProtectedResource>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleExportExcel}
+                  className="inline-flex items-center justify-center p-2 rounded-lg border border-slate-200 bg-white text-slate-600 hover:text-green-700 hover:border-green-200 hover:bg-green-50 transition-all shadow-sm group"
+                  title={intl.formatMessage({ id: 'dashboard.export_excel' })}
+                >
+                  <Download className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                </button>
+                <ProtectedResource action={['STOCK_ADJUST_GLOBAL', 'STOCK_EDIT_SELF']}>
+                  <Button onClick={() => handleOpenModal('ADD')} className="flex-1 sm:flex-initial gap-2" style={{ backgroundColor: primaryColor }} title={intl.formatMessage({ id: 'inventory.add' })}>
+                    <Plus className="w-4 h-4 ml-1" />
+                    <span className="hidden sm:inline">{intl.formatMessage({ id: 'inventory.add' })}</span>
+                  </Button>
+                </ProtectedResource>
+              </div>
             </div>
           </div>
         </CardHeader>

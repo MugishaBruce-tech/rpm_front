@@ -94,10 +94,10 @@ export function MDDashboard() {
     let isMounted = true;
     const loadData = async () => {
       setLoading(true);
-      
+
       try {
         const params = selectedRegion === 'Global' ? {} : { region: selectedRegion };
-        
+
         const [dashboardStats, allDistribution, materials] = await Promise.all([
           dashboardService.getDashboardStats(params).catch(() => null),
           dashboardService.getInventoryDistribution(params).catch(() => []),
@@ -120,13 +120,13 @@ export function MDDashboard() {
           .map((item: any) => {
             const stockVal = item.totalStock ?? item.stock ?? item.total_physical ?? 0;
             return {
-              name: selectedRegion === 'Global' 
-                ? (item.region || item.Region || 'Unknown Region') 
+              name: selectedRegion === 'Global'
+                ? (item.region || item.Region || 'Unknown Region')
                 : (item.partnerName || item.name || item.business_partner_name || 'Unknown Entity'),
               value: Number(stockVal)
             };
           });
-        
+
         setTopEntities(sortedEntities);
 
         // Get all materials for the big chart
@@ -137,7 +137,7 @@ export function MDDashboard() {
             name: (m.code || 'Unknown').replace(/\s{2,}/g, ' ').trim(),
             stock: Number(m.value || 0)
           }));
-        
+
         setMaterialData(allMaterials);
 
       } catch (err) {
@@ -148,7 +148,7 @@ export function MDDashboard() {
     };
 
     loadData();
-    
+
     return () => {
       isMounted = false;
     };
@@ -191,7 +191,7 @@ export function MDDashboard() {
           fontWeight: '600',
           color: '#64748B'
         },
-        formatter: function() {
+        formatter: function () {
           return Highcharts.numberFormat(this.value as number, 0, '.', ',');
         }
       },
@@ -285,7 +285,7 @@ export function MDDashboard() {
               extension: 'png',
             });
             worksheet.addImage(logoId, {
-              tl: { col: 5.15, row: 0.3 }, 
+              tl: { col: 5.15, row: 0.3 },
               ext: { width: 90, height: 75 }
             });
           } catch (e) {
@@ -296,7 +296,7 @@ export function MDDashboard() {
           worksheet.mergeCells(`A${metaRow}:C${metaRow}`);
           worksheet.getCell(`A${metaRow}`).value = `Généré par: ${authService.getCurrentUser()?.name || 'Utilisateur'}`;
           worksheet.getCell(`A${metaRow}`).font = { bold: true, size: 11, color: { argb: 'FF1E293B' } };
-          
+
           worksheet.mergeCells(`D${metaRow}:F${metaRow}`);
           worksheet.getCell(`D${metaRow}`).value = `Date: ${new Date().toLocaleString()}`;
           worksheet.getCell(`D${metaRow}`).alignment = { horizontal: 'right' };
@@ -307,16 +307,16 @@ export function MDDashboard() {
           canvas.width = 1000;
           canvas.height = 500;
           const ctx = canvas.getContext('2d')!;
-          
+
           ctx.fillStyle = '#FFFFFF';
           ctx.fillRect(0, 0, canvas.width, canvas.height);
-          
+
           const totalStock = materialData.reduce((acc, m) => acc + (m.stock || 0), 0);
           const chartData = [
             ...materialData,
             { id: 'total', name: 'TOTAL', stock: totalStock }
           ];
-          
+
           const totalItems = chartData.length;
           const maxValue = Math.max(...chartData.map(m => m.stock || 0), 10);
           const barWidth = (canvas.width - 200) / totalItems;
@@ -326,20 +326,20 @@ export function MDDashboard() {
 
           chartData.forEach((m, i) => {
             const h = ((m.stock || 0) / maxValue) * chartHeight;
-            ctx.fillStyle = m.id === 'total' 
-              ? '#1b7a00' 
+            ctx.fillStyle = m.id === 'total'
+              ? '#1b7a00'
               : (i % 2 === 0 ? '#008200' : '#D71921');
             ctx.fillRect(startX + i * barWidth + 20, startY - h, barWidth - 40, h);
-            
+
             ctx.fillStyle = '#64748B';
             ctx.font = 'bold ' + (totalItems > 8 ? '12px' : '16px') + ' Arial';
             ctx.textAlign = 'center';
             const label = m.name.length > 15 ? m.name.substring(0, 12) + '...' : m.name;
-            ctx.fillText(label, startX + i * barWidth + (barWidth/2), startY + 40);
-            
+            ctx.fillText(label, startX + i * barWidth + (barWidth / 2), startY + 40);
+
             ctx.fillStyle = '#0F172A';
             ctx.font = 'bold ' + (totalItems > 8 ? '14px' : '18px') + ' Arial';
-            ctx.fillText(String(m.stock || 0), startX + i * barWidth + (barWidth/2), startY - h - 15);
+            ctx.fillText(String(m.stock || 0), startX + i * barWidth + (barWidth / 2), startY - h - 15);
           });
 
           const imageBase64 = canvas.toDataURL('image/png');
@@ -347,7 +347,7 @@ export function MDDashboard() {
             base64: imageBase64,
             extension: 'png',
           });
-          
+
           worksheet.addImage(imageId, {
             tl: { col: 0.2, row: 7 },
             ext: { width: 700, height: 350 }
@@ -377,7 +377,7 @@ export function MDDashboard() {
               (m.stock || 0) > 10 ? 'OK' : 'STOCK BAS'
             ];
             r.height = 20;
-            
+
             if (idx % 2 === 1) {
               r.eachCell(cell => {
                 cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF8FAFC' } };
@@ -385,11 +385,11 @@ export function MDDashboard() {
             }
 
             r.eachCell((cell, colId) => {
-               cell.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } };
-               if (colId === 4) cell.font = { bold: true };
-               if (colId === 6) {
-                 cell.font = { bold: true, color: { argb: (m.stock || 0) > 10 ? 'FF008200' : 'FFD71921' } };
-               }
+              cell.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } };
+              if (colId === 4) cell.font = { bold: true };
+              if (colId === 6) {
+                cell.font = { bold: true, color: { argb: (m.stock || 0) > 10 ? 'FF008200' : 'FFD71921' } };
+              }
             });
           });
 
@@ -405,7 +405,7 @@ export function MDDashboard() {
           const now = new Date();
           const timestamp = `${now.toISOString().split('T')[0]}_${now.getHours()}-${now.getMinutes()}`;
           saveAs(blob, `inventaire-rpm-${selectedRegion.toLowerCase()}-${timestamp}.xlsx`);
-          
+
           resolve(true);
         } catch (err) {
           reject(err);
@@ -422,14 +422,14 @@ export function MDDashboard() {
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] text-slate-800 font-sans selection:bg-green-100">
-      
+
       {/* Brand Watermark Overlay */}
       <div className="fixed inset-0 pointer-events-none flex items-center justify-center overflow-hidden z-0">
-         <Star className="w-[900px] h-[900px] text-red-600/5 rotate-12 blur-[1px] drop-shadow-[0_0_30px_rgba(220,38,38,0.08)]" />
+        <Star className="w-[900px] h-[900px] text-red-600/5 rotate-12 blur-[1px] drop-shadow-[0_0_30px_rgba(220,38,38,0.08)]" />
       </div>
 
       <div className="relative z-10 flex flex-col min-h-screen">
-        
+
         {/* Excellence Navigation */}
         <header className="bg-white border-b border-slate-200">
           <div className="max-w-[1600px] mx-auto px-4 sm:px-6 py-3 sm:h-16 flex items-center justify-end">
@@ -438,7 +438,7 @@ export function MDDashboard() {
               <div className="flex items-center gap-2 bg-slate-100 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-xl border border-slate-200">
                 <MapPin className="w-3 sm:w-3.5 h-3 sm:h-3.5 text-[#D71921]" />
                 <span className="text-[9px] sm:text-[10px] font-black text-slate-500 uppercase tracking-widest mr-0.5 sm:mr-1">{intl.formatMessage({ id: 'common.region_colon' })}</span>
-                <select 
+                <select
                   className="bg-transparent text-[10px] sm:text-xs font-bold text-slate-800 outline-none cursor-pointer pr-1 sm:pr-2"
                   value={selectedRegion}
                   onChange={(e) => setSelectedRegion(e.target.value)}
@@ -453,10 +453,10 @@ export function MDDashboard() {
         </header>
 
         <main className="max-w-[1600px] mx-auto w-full px-6 py-8 flex-1">
-          
+
           <AnimatePresence mode="wait">
             {loading ? (
-              <motion.div 
+              <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
@@ -471,12 +471,12 @@ export function MDDashboard() {
                 </span>
               </motion.div>
             ) : (
-              <motion.div 
+              <motion.div
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
                 className="space-y-4"
               >
-                
+
                 {/* Performance Highlights */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                   {[
@@ -485,7 +485,7 @@ export function MDDashboard() {
                     { label: intl.formatMessage({ id: 'dashboard.regional_loans' }), value: stats?.transfers || 0, icon: ArrowRightLeft, color: "#008200", trend: "+12.4%", type: intl.formatMessage({ id: 'dashboard.in_transit' }) },
                     { label: intl.formatMessage({ id: 'dashboard.system_health' }), value: `${stats?.health || 99.8}%`, icon: ShieldCheck, color: "#D71921", trend: intl.formatMessage({ id: 'dashboard.verified' }), type: intl.formatMessage({ id: 'dashboard.kpi_status' }) }
                   ].map((kpi, i) => (
-                    <motion.div 
+                    <motion.div
                       key={kpi.label}
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
@@ -493,7 +493,7 @@ export function MDDashboard() {
                       className="group p-6 rounded-lg bg-white border border-slate-200 hover:border-green-600/30 transition-all shadow-sm hover:shadow-xl hover:shadow-green-900/5 relative overflow-hidden"
                     >
                       <div className="absolute top-0 right-0 w-16 h-16 bg-slate-50 flex items-center justify-center rounded-bl-xl border-l border-b border-slate-100">
-                         <kpi.icon className="w-6 h-6" style={{ color: kpi.color }} />
+                        <kpi.icon className="w-6 h-6" style={{ color: kpi.color }} />
                       </div>
                       <div className="space-y-2">
                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{kpi.type}</p>
@@ -512,7 +512,7 @@ export function MDDashboard() {
                 </div>
 
                 <div className="grid grid-cols-1 gap-4">
-                  
+
                   {/* Comprehensive Material Volume Analysis */}
                   <div className="p-8 rounded-xl bg-white border border-slate-200 shadow-sm flex flex-col min-h-[500px]">
                     <div className="flex items-center justify-between mb-10">
@@ -524,20 +524,20 @@ export function MDDashboard() {
                       </div>
                       <div className="flex items-center gap-4">
                         <div className="flex items-center gap-2 bg-slate-50 px-4 py-2 rounded-lg border border-slate-100">
-                           <Activity className="w-4 h-4 text-[#D71921]" />
-                           <span className="text-xs font-bold text-slate-600">
-                             {intl.formatMessage({ id: 'dashboard.total_materials' })} {materialData.length}
-                           </span>
+                          <Activity className="w-4 h-4 text-[#D71921]" />
+                          <span className="text-xs font-bold text-slate-600">
+                            {intl.formatMessage({ id: 'dashboard.total_materials' })} {materialData.length}
+                          </span>
                         </div>
-                         <button 
-                           onClick={handleExportExcel}
-                           className="p-3 rounded-lg bg-green-600 text-white shadow-lg shadow-green-900/20 hover:bg-green-700 transition-all"
-                         >
-                           <Download className="w-5 h-5" />
-                         </button>
+                        <button
+                          onClick={handleExportExcel}
+                          className="p-3 rounded-lg bg-green-600 text-white shadow-lg shadow-green-900/20 hover:bg-green-700 transition-all"
+                        >
+                          <Download className="w-5 h-5" />
+                        </button>
                       </div>
                     </div>
-                    
+
                     <div className="flex-1 w-full overflow-hidden">
                       <HighchartsReact
                         highcharts={Highcharts}
@@ -549,30 +549,30 @@ export function MDDashboard() {
                   {/* Operational Summary: Regions or Nodes */}
                   <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                     <div className="lg:col-span-2 p-8 rounded-xl bg-white border border-slate-200 shadow-sm">
-                       <div className="flex items-center justify-between mb-6">
-                          <h3 className="text-lg font-bold text-slate-900 uppercase tracking-tight">
-                            {selectedRegion === 'Global' 
-                              ? intl.formatMessage({ id: 'dashboard.regional_network_distribution' }) 
-                              : intl.formatMessage({ id: 'dashboard.operational_nodes' }, { region: selectedRegion })}
-                          </h3>
-                          <Globe className="w-5 h-5 text-slate-400" />
-                       </div>
-                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                          {topEntities.slice(0, 8).map((entity, idx) => (
-                            <div key={idx} className="flex items-center gap-4 p-4 rounded-lg bg-slate-50 border border-slate-100 hover:border-green-600/20 transition-all group">
-                               <div className="w-10 h-10 rounded-lg bg-white border border-slate-200 flex items-center justify-center text-xs font-black text-slate-400 group-hover:bg-green-600 group-hover:text-white transition-all">
-                                 {idx + 1}
-                               </div>
-                               <div className="flex-1 min-w-0">
-                                 <p className="text-sm font-extrabold text-slate-800 truncate uppercase tracking-tight">{entity.name}</p>
-                                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                                   {intl.formatMessage({ id: 'dashboard.capacity_label' }, { n: (entity.value / 1000).toFixed(1) })}
-                                 </p>
-                               </div>
-                               <div className={`w-2 h-2 rounded-full ${entity.value > 0 ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]' : 'bg-slate-300'}`} />
+                      <div className="flex items-center justify-between mb-6">
+                        <h3 className="text-lg font-bold text-slate-900 uppercase tracking-tight">
+                          {selectedRegion === 'Global'
+                            ? intl.formatMessage({ id: 'dashboard.regional_network_distribution' })
+                            : intl.formatMessage({ id: 'dashboard.operational_nodes' }, { region: selectedRegion })}
+                        </h3>
+                        <Globe className="w-5 h-5 text-slate-400" />
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {topEntities.slice(0, 8).map((entity, idx) => (
+                          <div key={idx} className="flex items-center gap-4 p-4 rounded-lg bg-slate-50 border border-slate-100 hover:border-green-600/20 transition-all group">
+                            <div className="w-10 h-10 rounded-lg bg-white border border-slate-200 flex items-center justify-center text-xs font-black text-slate-400 group-hover:bg-green-600 group-hover:text-white transition-all">
+                              {idx + 1}
                             </div>
-                          ))}
-                       </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-extrabold text-slate-800 truncate uppercase tracking-tight">{entity.name}</p>
+                              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                                {intl.formatMessage({ id: 'dashboard.capacity_label' }, { n: (entity.value / 1000).toFixed(1) })}
+                              </p>
+                            </div>
+                            <div className={`w-2 h-2 rounded-full ${entity.value > 0 ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]' : 'bg-slate-300'}`} />
+                          </div>
+                        ))}
+                      </div>
                     </div>
 
                     <div className="p-8 rounded-2xl bg-green-600 shadow-xl shadow-green-900/10 text-white flex flex-col justify-between relative overflow-hidden">
@@ -586,10 +586,10 @@ export function MDDashboard() {
                         <p className="text-sm mt-4 text-green-50/80 leading-relaxed font-medium">All material movements in the {selectedRegion} region are synchronized with Brarudi HQ.</p>
                       </div>
                       <div className="mt-8">
-                         <button className="w-full py-3 bg-white text-green-700 rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-green-50 transition-all flex items-center justify-center gap-2 shadow-lg">
-                            <Zap className="w-4 h-4" />
-                            Optimize Network
-                         </button>
+                        <button className="w-full py-3 bg-white text-green-700 rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-green-50 transition-all flex items-center justify-center gap-2 shadow-lg">
+                          <Zap className="w-4 h-4" />
+                          Optimize Network
+                        </button>
                       </div>
                     </div>
                   </div>
@@ -602,7 +602,8 @@ export function MDDashboard() {
         </main>
       </div>
 
-      <style dangerouslySetInnerHTML={{__html: `
+      <style dangerouslySetInnerHTML={{
+        __html: `
         .custom-scrollbar::-webkit-scrollbar { width: 5px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #E2E8F0; border-radius: 10px; border: 2px solid #F8FAFC; }

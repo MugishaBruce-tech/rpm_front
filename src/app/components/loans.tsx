@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useIntl } from 'react-intl';
-import { FileText, Plus, X, Package, AlertTriangle, CheckCircle, Bell, Check, Ban, Clock, XCircle, ThumbsUp, ThumbsDown, CheckCheck, SquareCheckBig, Layers, ArrowRightLeft, WifiOff, Search, ChevronDown } from 'lucide-react';
+import { FileText, Plus, X, Package, AlertTriangle, CheckCircle, Bell, Check, Ban, Clock, XCircle, ThumbsUp, ThumbsDown, CheckCheck, SquareCheckBig, Layers, ArrowRightLeft, WifiOff, Search, ChevronDown, Download } from 'lucide-react';
 import Swal from 'sweetalert2';
 import { toast } from 'sonner';
 import { usePrimaryColor } from '../hooks/usePrimaryColor';
@@ -14,6 +14,10 @@ import { Skeleton } from './ui/skeleton';
 import { PartnerSelector } from './ui/PartnerSelector';
 import { RegionSelector } from './ui/RegionSelector';
 import { usePartnerContext } from '../contexts/PartnerContext';
+import ExcelJS from 'exceljs';
+import { saveAs } from 'file-saver';
+// @ts-ignore
+import headerImageLogo from '../../assets/logo3.png';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface LoanItem {
@@ -116,9 +120,9 @@ export function Loans() {
   });
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(false);
-  const [materials, setMaterials] = useState<Array<{ id: number; sku: string; alias?: string; description: string }>>([]);
+  const [materials, setMaterials] = useState<Array<{ id: number | string; sku: string; alias?: string; description: string }>>([]);
   const [loadingMaterials, setLoadingMaterials] = useState(false);
-  const [partners, setPartners] = useState<Array<{ id: number; name: string; type: string }>>([]);
+  const [partners, setPartners] = useState<Array<{ id: number | string; name: string; type: string }>>([]);
   const [loadingPartners, setLoadingPartners] = useState(false);
 
   // Pagination
@@ -578,6 +582,107 @@ export function Loans() {
     } finally { setLoading(false); }
   };
 
+  const handleExportExcel = async () => {
+    try {
+      const activeData = activeTab === 'myRequests' ? myRequests :
+                         activeTab === 'incoming' ? incomingPending :
+                         activeTab === 'approved' ? approvedByMe :
+                         activeTab === 'denied' ? deniedByMe :
+                         activeTab === 'extSent' ? extSentItems :
+                         extReturnedItems;
+
+      if (activeData.length === 0) {
+        toast.error(intl.formatMessage({ id: 'export.no_data' }) || 'No data to export');
+        return;
+      }
+
+      toast.promise(new Promise(async (resolve, reject) => {
+        try {
+          const workbook = new ExcelJS.Workbook();
+          const worksheet = workbook.addWorksheet(activeTab);
+
+          // 1. BRANDING HEADER
+          worksheet.mergeCells('A1:F4');
+          const titleCell = worksheet.getCell('A1');
+          const tabLabel = tabs.find(t => t.key === activeTab)?.label || activeTab;
+          titleCell.value = `BRARUDI RPM TRACKER - ${tabLabel.toUpperCase()}`;
+          titleCell.alignment = { horizontal: 'center', vertical: 'middle' };
+          titleCell.font = { name: 'Arial Black', size: 16, color: { argb: 'FFFFFFFF' } };
+          titleCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF008200' } };
+
+          try {
+            const logoRes = await fetch(headerImageLogo);
+            const logoBlob = await logoRes.blob();
+            const logoBuffer = await logoBlob.arrayBuffer();
+            const logoId = workbook.addImage({
+              buffer: logoBuffer,
+              extension: 'png',
+            });
+            worksheet.addImage(logoId, {
+              tl: { col: 5.15, row: 0.3 },
+              ext: { width: 90, height: 75 }
+            });
+          } catch (e) { console.error('Logo failed:', e); }
+
+          const metaRow = 6;
+          worksheet.mergeCells(`A${metaRow}:C${metaRow}`);
+          worksheet.getCell(`A${metaRow}`).value = `Généré par: ${currentUser?.name || 'Utilisateur'}`;
+          worksheet.getCell(`A${metaRow}`).font = { bold: true, color: { argb: 'FF1E293B' } };
+          
+          worksheet.mergeCells(`D${metaRow}:F${metaRow}`);
+          worksheet.getCell(`D${metaRow}`).value = `Date: ${new Date().toLocaleString()}`;
+          worksheet.getCell(`D${metaRow}`).alignment = { horizontal: 'right' };
+          worksheet.getCell(`D${metaRow}`).font = { italic: true, color: { argb: 'FF64748B' } };
+
+          // 2. DATA TABLE
+          const startRow = 8;
+          const headerRow = worksheet.getRow(startRow);
+          headerRow.values = ['NO', 'REQUÉRANT / DESTINATAIRE', 'PRODUIT', 'QUANTITÉ', 'DATE', 'STATUT'];
+          headerRow.height = 25;
+          headerRow.eachCell((cell) => {
+            cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+            cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1E293B' } };
+            cell.alignment = { horizontal: 'center', vertical: 'middle' };
+          });
+
+          activeData.forEach((item, idx) => {
+            const row = worksheet.getRow(startRow + 1 + idx);
+            row.values = [
+              idx + 1,
+              item.partner,
+              item.product,
+              item.quantity,
+              item.date,
+              item.status
+            ];
+            
+            if (idx % 2 === 1) {
+              row.eachCell(cell => {
+                cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF8FAFC' } };
+              });
+            }
+          });
+
+          worksheet.getColumn(1).width = 5;
+          worksheet.getColumn(2).width = 40;
+          worksheet.getColumn(3).width = 40;
+          worksheet.getColumn(4).width = 15;
+          worksheet.getColumn(5).width = 20;
+          worksheet.getColumn(6).width = 15;
+
+          const buffer = await workbook.xlsx.writeBuffer();
+          const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+          saveAs(blob, `rpm-loans-${activeTab}-${new Date().toISOString().split('T')[0]}.xlsx`);
+          resolve(true);
+        } catch (e) { reject(e); }
+      }), {
+        loading: 'Génération Excel...',
+        success: 'Succès !',
+        error: 'Échec.'
+      });
+    } catch (e) { console.error(e); }
+  };
+
   // ── Tab config ──────────────────────────────────────────────────────────────
   const tabs: { key: TabKey; label: string; icon: React.ReactNode; count: number; badgeColor: string }[] = [
     { key: 'myRequests', label: intl.formatMessage({ id: 'loans.my_requests' }), icon: <FileText className="w-4 h-4" />, count: myRequests.length, badgeColor: 'bg-slate-500' },
@@ -752,6 +857,14 @@ export function Loans() {
               <RegionSelector />
               <PartnerSelector />
               <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                <Button 
+                  onClick={handleExportExcel} 
+                  variant="outline" 
+                  className="gap-2 border-slate-200" 
+                  title={intl.formatMessage({ id: 'dashboard.export_excel' })}
+                >
+                  <Download className="w-4 h-4" />
+                </Button>
                 <Button onClick={() => handleOpenModal('external')} variant="outline" className="gap-2 border-dashed border-2" style={{ color: primaryColor, borderColor: primaryColor }} title={intl.formatMessage({ id: 'loans.external_request' })}>
                   <ArrowRightLeft className="w-4 h-4" />
                   <span className="hidden sm:inline">{intl.formatMessage({ id: 'loans.external_request' })}</span>
