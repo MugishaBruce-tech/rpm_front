@@ -545,12 +545,12 @@ export function MainLayout() {
         <header 
           className="text-white px-4 sm:px-6 py-3 relative overflow-hidden" 
           style={{ 
-            backgroundColor: '#064e3b',
+            backgroundColor: '#168c17',
             backgroundImage: `
-              linear-gradient(45deg, #065f46 25%, transparent 25%), 
-              linear-gradient(-45deg, #065f46 25%, transparent 25%), 
-              linear-gradient(45deg, transparent 75%, #065f46 75%), 
-              linear-gradient(-45deg, transparent 75%, #065f46 75%)
+              linear-gradient(45deg, #107511 25%, transparent 25%), 
+              linear-gradient(-45deg, #107511 25%, transparent 25%), 
+              linear-gradient(45deg, transparent 75%, #107511 75%), 
+              linear-gradient(-45deg, transparent 75%, #107511 75%)
             `,
             backgroundSize: '40px 40px',
             backgroundPosition: '0 0, 0 20px, 20px -20px, -20px 0px'
