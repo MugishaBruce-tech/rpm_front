@@ -13,7 +13,6 @@ import { Skeleton } from './ui/skeleton';
 import { ProtectedResource } from './ui/ProtectedResource';
 import { Plus, Users, Edit2, Trash, History, Clock, Save, ShieldCheck, Mail, MapPin, Key, Download } from 'lucide-react';
 import { authService } from '../services/authService';
-import ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
 // @ts-ignore
 import headerImageLogo from '../../assets/logo3.png';
@@ -206,6 +205,7 @@ export function BrarudiUserList() {
 
       toast.promise(new Promise(async (resolve, reject) => {
         try {
+          const ExcelJS = (await import('exceljs')).default;
           const workbook = new ExcelJS.Workbook();
           const worksheet = workbook.addWorksheet('Users');
 

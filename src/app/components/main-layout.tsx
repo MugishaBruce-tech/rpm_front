@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router';
 import { LayoutDashboard, Package, FileText, LogOut, Search, Bell, User, Flag, Menu, X, UserPlus, Settings, ChevronDown, Palette, Layers, ShieldCheck, Users, History, Globe, MoreHorizontal } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
@@ -12,6 +13,7 @@ import { authService } from '../services/authService';
 import { apiRequest } from '../services/api';
 import { ProtectedResource } from './ui/ProtectedResource';
 import { OfflineStatus } from './ui/OfflineStatus';
+import { Skeleton } from './ui/skeleton';
 import enFlag from '@/assets/en-flag.png';
 import frFlag from '@/assets/fr-flag.png';
 import headerImageLogo from '@/assets/logo3.png';
@@ -704,7 +706,9 @@ export function MainLayout() {
 
         {/* Page Content */}
         <main className="flex-1 overflow-auto">
-          <Outlet />
+          <Suspense fallback={<div className="p-6 space-y-4"><Skeleton className="h-8 w-1/4" /><Skeleton className="h-64 w-full" /></div>}>
+            <Outlet />
+          </Suspense>
         </main>
 
         <OfflineStatus />

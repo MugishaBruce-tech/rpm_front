@@ -14,7 +14,6 @@ import { Skeleton } from './ui/skeleton';
 import { PartnerSelector } from './ui/PartnerSelector';
 import { RegionSelector } from './ui/RegionSelector';
 import { usePartnerContext } from '../contexts/PartnerContext';
-import ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
 // @ts-ignore
 import headerImageLogo from '../../assets/logo3.png';
@@ -598,6 +597,7 @@ export function Loans() {
 
       toast.promise(new Promise(async (resolve, reject) => {
         try {
+          const ExcelJS = (await import('exceljs')).default;
           const workbook = new ExcelJS.Workbook();
           const worksheet = workbook.addWorksheet(activeTab);
 

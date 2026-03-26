@@ -13,7 +13,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/
 import { Skeleton } from './ui/skeleton';
 import { ProtectedResource } from './ui/ProtectedResource';
 import { Plus, Users, Edit2, Trash, AlertCircle, ChevronLeft, ChevronRight, Save, History, Clock, MapPin, Monitor, Smartphone, Globe, Key, Download } from 'lucide-react';
-import ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
 import { authService } from '../services/authService';
 // @ts-ignore
@@ -136,6 +135,7 @@ export function UserList() {
 
       toast.promise(new Promise(async (resolve, reject) => {
         try {
+          const ExcelJS = (await import('exceljs')).default;
           const workbook = new ExcelJS.Workbook();
           const worksheet = workbook.addWorksheet('Users');
 

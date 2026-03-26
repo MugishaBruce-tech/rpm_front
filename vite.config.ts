@@ -3,6 +3,7 @@ import path from 'path'
 import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
+import { visualizer } from 'rollup-plugin-visualizer'
 
 export default defineConfig({
   plugins: [
@@ -30,7 +31,13 @@ export default defineConfig({
           }
         ]
       }
-    })
+    }),
+    visualizer({
+      open: true,
+      filename: 'bundle-stats.html',
+      gzipSize: true,
+      brotliSize: true,
+    }),
   ],
   resolve: {
     alias: {
@@ -49,8 +56,32 @@ export default defineConfig({
   build: {
     rollupOptions: {
       output: {
-        manualChunks: {
-          vendor: ['react', 'react-dom', 'framer-motion', 'lucide-react', 'recharts'],
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            // Visualization & Document tools
+            if (id.includes('highcharts')) return 'vendor-highcharts'
+            if (id.includes('echarts')) return 'vendor-echarts'
+            if (id.includes('recharts') || id.includes('d3-')) return 'vendor-recharts'
+            if (id.includes('exceljs')) return 'vendor-exceljs'
+            
+            // UI Frameworks & Components
+            if (id.includes('@mui')) return 'vendor-mui'
+            if (id.includes('@radix-ui')) return 'vendor-radix'
+            if (id.includes('lucide-react')) return 'vendor-lucide'
+            if (id.includes('framer-motion')) return 'vendor-framer'
+            
+            // Utilities
+            if (id.includes('lodash')) return 'vendor-lodash'
+            if (id.includes('date-fns')) return 'vendor-date-fns'
+
+            // Catch-all removal: Let Vite handle the rest of node_modules 
+            // to avoid circular dependency issues between libraries.
+            if (id.includes('/node_modules/react/') || 
+                id.includes('/node_modules/react-dom/') || 
+                id.includes('/node_modules/react-router/')) {
+              return 'vendor-react-core'
+            }
+          }
         },
       },
     },

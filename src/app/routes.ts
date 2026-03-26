@@ -1,21 +1,26 @@
+import { lazy, Suspense } from "react";
 import { createBrowserRouter } from "react-router";
 import { MainLayout } from "./components/main-layout";
-import { Dashboard } from "./components/dashboard";
-import { StockManagement } from "./components/stock-management";
-import { Loans } from "./components/loans";
 import { Login } from "./components/login";
-import { UserManagement } from "./components/user-management";
-import { UserList } from "./components/user-list";
-import { UserEdit } from "./components/user-edit";
-import { ColorSettings } from "./components/color-settings";
 import { AuthGuard } from "./components/auth-guard";
-import { PermissionsManager } from "./components/permissions/PermissionsManager";
-import { UsersStockDirectory, UsersLoansDirectory } from "./components/users-directory";
-import { OPCORegionalInventory, OPCORegionalLoans, OPCOUserDirectory } from "./components/OPCOView";
-import AuditLogs from "./components/audit-logs";
 
-import { BusinessPartnerList } from "./components/business-partner-list";
-import { BrarudiUserList } from "./components/brarudi-user-list";
+// Lazy load components
+const Dashboard = lazy(() => import("./components/dashboard").then(m => ({ default: m.Dashboard })));
+const StockManagement = lazy(() => import("./components/stock-management").then(m => ({ default: m.StockManagement })));
+const Loans = lazy(() => import("./components/loans").then(m => ({ default: m.Loans })));
+const UserManagement = lazy(() => import("./components/user-management").then(m => ({ default: m.UserManagement })));
+const UserList = lazy(() => import("./components/user-list").then(m => ({ default: m.UserList })));
+const UserEdit = lazy(() => import("./components/user-edit").then(m => ({ default: m.UserEdit })));
+const ColorSettings = lazy(() => import("./components/color-settings").then(m => ({ default: m.ColorSettings })));
+const PermissionsManager = lazy(() => import("./components/permissions/PermissionsManager").then(m => ({ default: m.PermissionsManager })));
+const UsersStockDirectory = lazy(() => import("./components/users-directory").then(m => ({ default: m.UsersStockDirectory })));
+const UsersLoansDirectory = lazy(() => import("./components/users-directory").then(m => ({ default: m.UsersLoansDirectory })));
+const OPCORegionalInventory = lazy(() => import("./components/OPCOView").then(m => ({ default: m.OPCORegionalInventory })));
+const OPCORegionalLoans = lazy(() => import("./components/OPCOView").then(m => ({ default: m.OPCORegionalLoans })));
+const OPCOUserDirectory = lazy(() => import("./components/OPCOView").then(m => ({ default: m.OPCOUserDirectory })));
+const AuditLogs = lazy(() => import("./components/audit-logs"));
+const BusinessPartnerList = lazy(() => import("./components/business-partner-list").then(m => ({ default: m.BusinessPartnerList })));
+const BrarudiUserList = lazy(() => import("./components/brarudi-user-list").then(m => ({ default: m.BrarudiUserList })));
 
 export const router = createBrowserRouter([
   {

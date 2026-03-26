@@ -12,7 +12,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Skeleton } from './ui/skeleton';
 import { Plus, Users, Edit2, Trash, Save, Mail, MapPin, Building2, Shield, Key, Download } from 'lucide-react';
-import ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
 // @ts-ignore
 import headerImageLogo from '../../assets/logo3.png';
@@ -221,6 +220,7 @@ export function BusinessPartnerList() {
 
       toast.promise(new Promise(async (resolve, reject) => {
         try {
+          const ExcelJS = (await import('exceljs')).default;
           const workbook = new ExcelJS.Workbook();
           const worksheet = workbook.addWorksheet('BusinessPartners');
 

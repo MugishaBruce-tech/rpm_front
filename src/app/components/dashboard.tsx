@@ -11,7 +11,6 @@ import { authService } from '../services/authService';
 import { OPCODashboard } from './opco-dashboard';
 import { MDDashboard } from './md-dashboard';
 import { dashboardService } from '../services/dashboardService';
-import ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
 import { toast } from 'sonner';
 // @ts-ignore
@@ -90,6 +89,7 @@ export function Dashboard() {
 
       toast.promise(new Promise(async (resolve, reject) => {
         try {
+          const ExcelJS = (await import('exceljs')).default;
           const workbook = new ExcelJS.Workbook();
           const worksheet = workbook.addWorksheet(intl.formatMessage({ id: 'dashboard.inventory' }) || 'Inventory');
 

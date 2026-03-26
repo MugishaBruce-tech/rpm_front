@@ -78,6 +78,7 @@
     "@tailwindcss/vite": "4.1.12",
     "@types/file-saver": "^2.0.7",
     "@vitejs/plugin-react": "4.7.0",
+    "rollup-plugin-visualizer": "^7.0.1",
     "tailwindcss": "4.1.12",
     "vite": "6.3.5",
     "vite-plugin-pwa": "^1.2.0"
