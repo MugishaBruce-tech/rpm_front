@@ -8,6 +8,15 @@ import { apiRequest } from '../services/api';
 import { authService } from '../services/authService';
 import { getPendingByEndpoint, addSyncListener, processQueue } from '../services/syncQueue';
 import { RefreshCw } from 'lucide-react';
+import { 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
+} from './ui/table';
+import { Badge } from './ui/badge';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
@@ -492,47 +501,48 @@ export function StockManagement() {
         </CardHeader>
         <CardContent>
           {loading ? (
-            <div className="space-y-4">
-              <div className="border border-slate-100 rounded-lg overflow-hidden">
-                <div className="p-4 bg-slate-50/50 border-b border-slate-100">
-                  <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                    <Skeleton className="h-4 w-24" />
-                    <Skeleton className="h-4 w-16 hidden md:block" />
-                    <Skeleton className="h-4 w-20 hidden md:block" />
-                    <Skeleton className="h-4 w-24 hidden md:block" />
-                    <Skeleton className="h-4 w-20 hidden md:block" />
-                  </div>
-                </div>
-                {[...Array(5)].map((_, i) => (
-                  <div key={i} className="p-4 border-b border-slate-100 last:border-0 bg-white">
-                    <div className="grid grid-cols-1 md:grid-cols-5 gap-4 items-center">
-                      <div className="flex gap-3 items-center">
-                        <Skeleton className="h-10 w-10 rounded-lg shrink-0" />
-                        <div className="space-y-2 flex-1">
-                          <Skeleton className="h-4 w-3/4" />
-                          <Skeleton className="h-3 w-1/2" />
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader className="bg-slate-50/50 border-b border-slate-200">
+                  <TableRow className="hover:bg-transparent">
+                    <TableHead className="px-6 py-4"><Skeleton className="h-4 w-24" /></TableHead>
+                    <TableHead className="px-6 py-4"><Skeleton className="h-4 w-16" /></TableHead>
+                    <TableHead className="px-6 py-4"><Skeleton className="h-4 w-20" /></TableHead>
+                    <TableHead className="px-6 py-4"><Skeleton className="h-4 w-24" /></TableHead>
+                    <TableHead className="px-6 py-4"><Skeleton className="h-4 w-20" /></TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {[...Array(limit)].map((_, i) => (
+                    <TableRow key={`skeleton-row-${i}`} className="border-b border-slate-100">
+                      <TableCell className="py-4 px-4 min-w-[200px]">
+                        <div className="flex items-start gap-3">
+                          <Skeleton className="w-8 h-8 rounded shrink-0" />
+                          <div className="space-y-2 flex-1">
+                            <Skeleton className="h-4 w-3/4" />
+                            <Skeleton className="h-3 w-1/2" />
+                          </div>
                         </div>
-                      </div>
-                      <div className="flex items-center gap-2 md:block">
-                        <span className="text-[10px] font-bold text-slate-400 uppercase md:hidden w-16">{intl.formatMessage({ id: 'dashboard.status' })}</span>
+                      </TableCell>
+                      <TableCell className="py-3 px-4">
                         <Skeleton className="h-5 w-20 rounded-full" />
-                      </div>
-                      <div className="flex items-center gap-2 md:block">
-                        <span className="text-[10px] font-bold text-slate-400 uppercase md:hidden w-16">{intl.formatMessage({ id: 'dashboard.quantity' })}</span>
+                      </TableCell>
+                      <TableCell className="py-3 px-4">
                         <Skeleton className="h-6 w-12 rounded" />
-                      </div>
-                      <div className="flex items-center gap-2 md:block">
-                        <span className="text-[10px] font-bold text-slate-400 uppercase md:hidden w-16">{intl.formatMessage({ id: 'inventory.location' })}</span>
+                      </TableCell>
+                      <TableCell className="py-3 px-4">
                         <Skeleton className="h-4 w-32" />
-                      </div>
-                      <div className="flex gap-2 pt-2 md:pt-0 border-t md:border-0 border-slate-50">
-                        <Skeleton className="h-9 flex-1 md:flex-none md:w-20 rounded-lg" />
-                        <Skeleton className="h-9 flex-1 md:flex-none md:w-20 rounded-lg" />
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
+                      </TableCell>
+                      <TableCell className="py-3 px-4">
+                        <div className="flex items-center justify-center gap-2">
+                          <Skeleton className="h-9 w-20 rounded" />
+                          <Skeleton className="h-9 w-20 rounded" />
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             </div>
           ) : filteredStock.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12">

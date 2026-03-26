@@ -465,10 +465,28 @@ function OPCODirectory({ type, title, icon: Icon }: { type: 'stock' | 'loans' | 
               </TableHeader>
               <TableBody>
                 {loadingPartners ? (
-                  [...Array(5)].map((_, i) => (
-                    <TableRow key={i}>
-                      <TableCell colSpan={4} className="px-6 py-4">
-                        <Skeleton className="h-12 w-full rounded" />
+                  [...Array(limit)].map((_, i) => (
+                    <TableRow key={`skeleton-row-${i}`} className="border-slate-100">
+                      <TableCell className="px-6 py-4">
+                        <div className="flex items-center gap-4">
+                          <Skeleton className="w-10 h-10 rounded-full" />
+                          <div className="space-y-2">
+                             <Skeleton className="h-4 w-32" />
+                             <Skeleton className="h-3 w-40" />
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell className="px-6 py-4">
+                         <div className="space-y-2">
+                            <Skeleton className="h-4 w-24" />
+                            <Skeleton className="h-3 w-20" />
+                         </div>
+                      </TableCell>
+                      <TableCell className="px-6 py-4">
+                         <Skeleton className="h-5 w-16 rounded" />
+                      </TableCell>
+                      <TableCell className="px-6 py-4 text-right">
+                         <Skeleton className="h-8 w-20 ml-auto rounded" />
                       </TableCell>
                     </TableRow>
                   ))
