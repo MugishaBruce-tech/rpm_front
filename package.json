@@ -80,12 +80,10 @@
     "@vitejs/plugin-react": "4.7.0",
     "rollup-plugin-visualizer": "^7.0.1",
     "tailwindcss": "4.1.12",
-    "vite": "6.3.5",
+    "vite": "^6.4.1",
     "vite-plugin-pwa": "^1.2.0"
   },
-  "pnpm": {
-    "overrides": {
-      "vite": "6.3.5"
-    }
+  "overrides": {
+    "serialize-javascript": "7.0.5"
   }
 }
