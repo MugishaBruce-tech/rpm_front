@@ -98,6 +98,10 @@ export const authService = {
     return user ? JSON.parse(user) : null;
   },
 
+  isAuthenticated: () => {
+    return !!localStorage.getItem('rpm-tracker-auth-token');
+  },
+
   getProfile: async () => {
     const data = await apiRequest('/auth/profile');
     if (data.result) {

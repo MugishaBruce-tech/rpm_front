@@ -2,6 +2,8 @@ import { Navigate, Outlet } from "react-router";
 import { authService } from "../services/authService";
 
 export const AuthGuard = () => {
-  // Authentication restriction removed temporarily
+  if (!authService.isAuthenticated()) {
+    return <Navigate to="/login" replace />;
+  }
   return <Outlet />;
 };

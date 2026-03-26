@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 import Swal from 'sweetalert2';
 import { colorService } from '../services/colorService';
 import { useLocaleContext } from '../contexts/LocaleContext';
+import { authService } from '../services/authService';
 import { apiRequest } from '../services/api';
 import { ProtectedResource } from './ui/ProtectedResource';
 import { OfflineStatus } from './ui/OfflineStatus';
@@ -28,8 +29,15 @@ export function MainLayout() {
   const [pendingLoans, setPendingLoans] = useState<any[]>([]);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
 
-  const user = JSON.parse(localStorage.getItem('rpm-tracker-auth-user') || localStorage.getItem('user') || '{}');
-  const userName = user.name || intl.formatMessage({ id: 'common.user' });
+  const user = authService.getCurrentUser();
+  const userName = user?.name || intl.formatMessage({ id: 'common.user' });
+
+  // Safety check: If for some reason we are in MainLayout without a user, redirect to login
+  useEffect(() => {
+    if (!authService.isAuthenticated() || !user) {
+      navigate('/login', { replace: true });
+    }
+  }, [user, navigate]);
 
   useEffect(() => {
     // Get initial color

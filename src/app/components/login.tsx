@@ -42,6 +42,13 @@ export const Login: React.FC = () => {
     return () => clearInterval(interval);
   }, [resendTimer]);
 
+  // Check for existing session on mount
+  useEffect(() => {
+    if (authService.isAuthenticated() && authService.getCurrentUser()) {
+       navigate('/', { replace: true });
+    }
+  }, [navigate]);
+
   useEffect(() => {
     // Check for Google Login results in URL fragment or search params
     const token = hashParams.get('token') || params.get('token');
