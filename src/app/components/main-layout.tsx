@@ -532,8 +532,21 @@ export function MainLayout() {
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden w-full">
         {/* Top Header */}
-        <header className="text-white px-4 sm:px-6 py-3" style={{ backgroundColor: primaryColor }}>
-          <div className="flex items-center justify-between">
+        <header 
+          className="text-white px-4 sm:px-6 py-3 relative overflow-hidden" 
+          style={{ 
+            backgroundColor: '#064e3b',
+            backgroundImage: `
+              linear-gradient(45deg, #065f46 25%, transparent 25%), 
+              linear-gradient(-45deg, #065f46 25%, transparent 25%), 
+              linear-gradient(45deg, transparent 75%, #065f46 75%), 
+              linear-gradient(-45deg, transparent 75%, #065f46 75%)
+            `,
+            backgroundSize: '40px 40px',
+            backgroundPosition: '0 0, 0 20px, 20px -20px, -20px 0px'
+          }}
+        >
+          <div className="flex items-center justify-between relative z-10">
             <div className="flex items-center gap-3 sm:gap-4">
               <button
                 onClick={() => setSidebarOpen(true)}
