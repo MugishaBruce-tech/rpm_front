@@ -349,60 +349,37 @@ export function Dashboard() {
                       </div>
                     </div>
 
-                    {/* Mobile: horizontal card list. Desktop: grid */}
-                    <div className="flex flex-col sm:hidden gap-2">
-                      {materialData.length > 0 ? materialData.map((material, idx) => (
-                        <motion.div
-                          key={idx}
-                          initial={{ opacity: 0, x: -10 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ delay: idx * 0.04 }}
-                          className="flex items-center gap-0 bg-white rounded-xl overflow-hidden shadow-sm border border-slate-100 active:scale-[0.98] transition-transform"
-                        >
-                          {/* Colored left accent bar */}
-                          <div className="w-1 self-stretch rounded-l-xl flex-shrink-0" style={{ backgroundColor: material.color || '#008200' }} />
-                          
-                          {/* Color dot + icon area */}
-                          <div className="w-12 h-12 mx-3 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: `${material.color || '#008200'}18` }}>
-                            <Package className="w-5 h-5" style={{ color: material.color || '#008200' }} />
+                    {/* Mobile: clean minimal list */}
+                    <div className="flex flex-col sm:hidden divide-y divide-slate-100 border border-slate-200 rounded-xl overflow-hidden bg-white">
+                      {materialData.length > 0 ? [
+                        ...materialData.map((material, idx) => (
+                          <div key={idx} className="flex items-center px-4 py-3 gap-3">
+                            <div className="w-2.5 h-2.5 rounded-full flex-shrink-0 mt-0.5" style={{ backgroundColor: material.color || '#008200' }} />
+                            <div className="flex-1 min-w-0">
+                              <p className="text-[11px] text-slate-400 font-medium truncate">{material.description}</p>
+                              <p className="text-sm font-bold text-slate-800 truncate">{material.code}</p>
+                            </div>
+                            <div className="text-right flex-shrink-0">
+                              <p className="text-base font-black text-slate-900 tabular-nums">{(material.value ?? 0).toLocaleString()}</p>
+                              <p className="text-[10px] text-slate-400 uppercase tracking-wider">{intl.formatMessage({ id: 'dashboard.units' })}</p>
+                            </div>
                           </div>
-
-                          {/* Text content */}
-                          <div className="flex-1 py-3 min-w-0">
-                            <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider truncate">{material.description}</p>
-                            <p className="text-sm font-black text-slate-800 truncate mt-0.5">{material.code}</p>
+                        )),
+                        <div key="total" className="flex items-center px-4 py-3 gap-3 bg-slate-50">
+                          <div className="w-2.5 h-2.5 rounded-full flex-shrink-0 bg-slate-800 mt-0.5" />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-[11px] text-slate-400 font-medium">BRARUDI S.A.</p>
+                            <p className="text-sm font-bold text-slate-800">Grand Total</p>
                           </div>
-
-                          {/* Value */}
-                          <div className="flex flex-col items-end pr-4 flex-shrink-0">
-                            <span className="text-xl font-black text-slate-900 tabular-nums leading-none">{(material.value ?? 0).toLocaleString()}</span>
-                            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">{intl.formatMessage({ id: 'dashboard.units' })}</span>
-                          </div>
-                        </motion.div>
-                      )).concat(
-                        <motion.div
-                          key="total-mobile"
-                          initial={{ opacity: 0, x: -10 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ delay: materialData.length * 0.04 }}
-                          className="flex items-center gap-0 rounded-xl overflow-hidden shadow-lg bg-gradient-to-r from-[#008200] to-green-700"
-                        >
-                          <div className="w-12 h-12 mx-3 rounded-xl flex items-center justify-center flex-shrink-0 bg-white/20">
-                            <Layers className="w-5 h-5 text-white" />
-                          </div>
-                          <div className="flex-1 py-3">
-                            <p className="text-[10px] font-bold text-green-100 uppercase tracking-wider">Grand Total · Brarudi S.A.</p>
-                            <p className="text-sm font-black text-white mt-0.5">Tous les matériaux</p>
-                          </div>
-                          <div className="flex flex-col items-end pr-4 flex-shrink-0">
-                            <span className="text-xl font-black text-white tabular-nums leading-none">
+                          <div className="text-right flex-shrink-0">
+                            <p className="text-base font-black text-slate-900 tabular-nums">
                               {materialData.reduce((acc, curr) => acc + (curr.value || 0), 0).toLocaleString()}
-                            </span>
-                            <span className="text-[9px] font-bold text-green-200 uppercase tracking-widest mt-0.5">UNITÉS</span>
+                            </p>
+                            <p className="text-[10px] text-slate-400 uppercase tracking-wider">UNITÉS</p>
                           </div>
-                        </motion.div>
-                      ) : (
-                        <div className="h-32 flex items-center justify-center text-slate-400 text-xs font-bold uppercase tracking-widest italic">
+                        </div>
+                      ] : (
+                        <div className="h-32 flex items-center justify-center text-slate-400 text-xs font-medium">
                           {intl.formatMessage({ id: 'inventory.no_data' })}
                         </div>
                       )}
