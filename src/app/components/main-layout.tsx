@@ -150,15 +150,15 @@ export function MainLayout() {
 
       {/* Sidebar */}
       <aside className={`
-        fixed lg:static inset-y-0 left-0 z-50
-        w-64 bg-white border-r border-slate-200 flex flex-col shadow-2xl lg:shadow-none
+        fixed inset-y-0 left-0 z-[60]
+        w-72 bg-white border-r border-slate-200 flex flex-col shadow-2xl lg:shadow-none
         transform transition-transform duration-500 cubic-bezier(0.4, 0, 0.2, 1)
-        ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+        ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0 lg:static lg:transform-none'}
       `}>
         {/* Close button for mobile */}
         <button
           onClick={() => setSidebarOpen(false)}
-          className="lg:hidden absolute top-4 right-4 p-2 hover:bg-slate-100"
+          className="lg:hidden absolute top-6 right-6 p-2 rounded-full hover:bg-slate-100 transition-colors bg-white shadow-sm border border-slate-100 z-[70]"
         >
           <X className="w-5 h-5 text-slate-600" />
         </button>
@@ -170,23 +170,25 @@ export function MainLayout() {
             <span className="text-[15px] font-bold text-slate-900 tracking-tight">Brarudi RPM Tracker</span>
           </div>
         </div> */}
-
         {/* User Profile */}
-        <div className="p-6 border-b border-slate-200">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ backgroundColor: primaryColor }}>
-              <User className="w-5 h-5 text-white" />
+        <div className="p-6 border-b border-slate-200 mt-2 lg:mt-0">
+          <div className="flex items-center gap-4">
+            <div 
+              className="w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold shadow-lg shadow-emerald-200/50"
+              style={{ backgroundColor: primaryColor }}
+            >
+              <User className="w-6 h-6" />
             </div>
             <div className="flex-1 min-w-0">
-              <h3 className="text-sm font-normal text-slate-900 truncate tracking-tight">{userName}</h3>
+              <p className="font-bold text-slate-800 leading-tight truncate">{userName}</p>
               <div className="mt-1 flex flex-col gap-0.5">
-                {user.role && (
-                  <p className="text-[10px] font-semibold text-[#0b680c] uppercase tracking-widest">
-                    {user.role}
+                {user?.role && (
+                  <p className="text-[10px] font-semibold uppercase tracking-widest truncate" style={{ color: primaryColor }}>
+                    {intl.messages[`role.${user.role}`] ? intl.formatMessage({ id: `role.${user.role}` }) : user.role}
                   </p>
                 )}
-                {user.region && (
-                  <p className="text-[9px] font-medium text-slate-400 uppercase tracking-[0.15em] flex items-center gap-1.5">
+                {user?.region && (
+                  <p className="text-[9px] font-medium text-slate-400 uppercase tracking-[0.15em] flex items-center gap-1.5 truncate">
                     <span className="w-1 h-1 rounded-full bg-slate-300"></span>
                     {user.region.toUpperCase()} {intl.formatMessage({ id: 'common.region' }).toUpperCase()}
                   </p>
@@ -194,8 +196,6 @@ export function MainLayout() {
               </div>
             </div>
           </div>
-
-
         </div>
 
         {/* Navigation */}
@@ -574,7 +574,7 @@ export function MainLayout() {
             </div>
 
             <div className="flex items-center gap-2 sm:gap-4">
-              <div className="flex items-center gap-1.5 sm:gap-3">
+              <div className="flex items-center gap-1 sm:gap-3">
                 <button
                   onClick={() => handleLanguageChange('fr')}
                   className={`p-0.5 transition-all hover:scale-110 active:scale-95 rounded-full border-2 ${locale === 'fr' ? 'border-white opacity-100' : 'border-transparent opacity-60'}`}
@@ -602,11 +602,11 @@ export function MainLayout() {
                 )}
               </button>
 
-              <div className="flex items-center gap-3 border-l border-white/10 pl-4 ml-2">
-                <div className="hidden sm:flex flex-col items-end">
+              <div className="flex items-center gap-2 sm:gap-3 border-l border-white/10 pl-2 sm:pl-4 ml-1 sm:ml-2">
+                <div className="hidden md:flex flex-col items-end">
                   <span className="text-[10px] font-black uppercase tracking-widest leading-none opacity-40">RPM Tracker</span>
                 </div>
-                <div className="w-10 h-10 flex items-center justify-center overflow-hidden">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center overflow-hidden">
                    <img src={headerImageLogo} alt="Brarudi Logo" className="w-full h-full object-contain" />
                 </div>
               </div>
