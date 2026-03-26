@@ -74,7 +74,25 @@ export const PermissionsProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
   useEffect(() => {
     loadPermissions();
+    
+    // Also listen for potential changes to localStorage from other components
+    // (though navigate usually doesn't trigger storage events, this is good practice)
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'rpm-tracker-auth-token' || e.key === 'rpm-tracker-auth-user') {
+        loadPermissions();
+      }
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
+
+  // Special effect to catch when a user has just logged in via client-side navigate
+  useEffect(() => {
+    if (permissions.length === 0 && authService.isAuthenticated()) {
+      loadPermissions();
+    }
+  }, [permissions.length]);
 
   const hasPermission = useCallback((action: PermissionAction) => {
     if (!action) return true;
