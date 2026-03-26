@@ -272,21 +272,7 @@ export function Dashboard() {
         </div>
 
         <header className="bg-white border-b border-slate-200 z-[100] relative">
-          <div className="max-w-[1600px] mx-auto px-6 py-4 sm:h-16 flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              {/* Logo removed - now in top bar */}
-              <div>
-                <h1 className="text-xl font-black text-slate-900 leading-tight">{intl.formatMessage({ id: 'dashboard.overview' })}</h1>
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">{intl.formatMessage({ id: 'dashboard.multi_depot_monitoring' })}</p>
-              </div>
-            </div>
-            <div className="bg-white border border-slate-200 px-4 py-2 rounded-lg shadow-sm flex items-center gap-2">
-              <Clock className="w-4 h-4 text-emerald-500" />
-              <span className="text-[11px] font-black text-slate-600 uppercase tabular-nums">
-                {new Date().toLocaleTimeString()}
-              </span>
-            </div>
-          </div>
+
         </header>
 
         <main className="max-w-[1600px] mx-auto w-full px-6 py-8 flex-1">
@@ -363,7 +349,67 @@ export function Dashboard() {
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-px bg-slate-100 border border-slate-200 rounded-lg overflow-hidden shadow-sm">
+                    {/* Mobile: horizontal card list. Desktop: grid */}
+                    <div className="flex flex-col sm:hidden gap-2">
+                      {materialData.length > 0 ? materialData.map((material, idx) => (
+                        <motion.div
+                          key={idx}
+                          initial={{ opacity: 0, x: -10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: idx * 0.04 }}
+                          className="flex items-center gap-0 bg-white rounded-xl overflow-hidden shadow-sm border border-slate-100 active:scale-[0.98] transition-transform"
+                        >
+                          {/* Colored left accent bar */}
+                          <div className="w-1 self-stretch rounded-l-xl flex-shrink-0" style={{ backgroundColor: material.color || '#008200' }} />
+                          
+                          {/* Color dot + icon area */}
+                          <div className="w-12 h-12 mx-3 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: `${material.color || '#008200'}18` }}>
+                            <Package className="w-5 h-5" style={{ color: material.color || '#008200' }} />
+                          </div>
+
+                          {/* Text content */}
+                          <div className="flex-1 py-3 min-w-0">
+                            <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider truncate">{material.description}</p>
+                            <p className="text-sm font-black text-slate-800 truncate mt-0.5">{material.code}</p>
+                          </div>
+
+                          {/* Value */}
+                          <div className="flex flex-col items-end pr-4 flex-shrink-0">
+                            <span className="text-xl font-black text-slate-900 tabular-nums leading-none">{(material.value ?? 0).toLocaleString()}</span>
+                            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">{intl.formatMessage({ id: 'dashboard.units' })}</span>
+                          </div>
+                        </motion.div>
+                      )).concat(
+                        <motion.div
+                          key="total-mobile"
+                          initial={{ opacity: 0, x: -10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: materialData.length * 0.04 }}
+                          className="flex items-center gap-0 rounded-xl overflow-hidden shadow-lg bg-gradient-to-r from-[#008200] to-green-700"
+                        >
+                          <div className="w-12 h-12 mx-3 rounded-xl flex items-center justify-center flex-shrink-0 bg-white/20">
+                            <Layers className="w-5 h-5 text-white" />
+                          </div>
+                          <div className="flex-1 py-3">
+                            <p className="text-[10px] font-bold text-green-100 uppercase tracking-wider">Grand Total · Brarudi S.A.</p>
+                            <p className="text-sm font-black text-white mt-0.5">Tous les matériaux</p>
+                          </div>
+                          <div className="flex flex-col items-end pr-4 flex-shrink-0">
+                            <span className="text-xl font-black text-white tabular-nums leading-none">
+                              {materialData.reduce((acc, curr) => acc + (curr.value || 0), 0).toLocaleString()}
+                            </span>
+                            <span className="text-[9px] font-bold text-green-200 uppercase tracking-widest mt-0.5">UNITÉS</span>
+                          </div>
+                        </motion.div>
+                      ) : (
+                        <div className="h-32 flex items-center justify-center text-slate-400 text-xs font-bold uppercase tracking-widest italic">
+                          {intl.formatMessage({ id: 'inventory.no_data' })}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Desktop / Tablet grid (sm and above) */}
+                    <div className="hidden sm:grid sm:grid-cols-2 lg:grid-cols-4 gap-px bg-slate-100 border border-slate-200 rounded-lg overflow-hidden shadow-sm">
                       {materialData.length > 0 ? (
                         materialData.map((material, idx) => (
                           <motion.div
@@ -376,62 +422,36 @@ export function Dashboard() {
                             }}
                             className="bg-white p-5 transition-colors flex flex-col justify-between h-36 group relative overflow-hidden"
                           >
-                            {/* Background Shimmer Effect */}
                             <motion.div
-                              variants={{
-                                hover: { x: ['-100%', '200%'] }
-                              }}
+                              variants={{ hover: { x: ['-100%', '200%'] } }}
                               transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
                               className="absolute inset-0 w-1/2 h-full skew-x-[-20deg] bg-gradient-to-r from-transparent via-white/40 to-transparent pointer-events-none z-10"
                             />
-
-                            {/* Hover Glow Detail */}
                             <motion.div
-                              variants={{
-                                hover: { opacity: 0.08, scale: 1 }
-                              }}
+                              variants={{ hover: { opacity: 0.08, scale: 1 } }}
                               initial={{ opacity: 0, scale: 0.8 }}
                               className="absolute -right-4 -bottom-4 w-32 h-32 rounded-full blur-[40px] pointer-events-none z-0"
                               style={{ backgroundColor: material.color || '#008200' }}
                             />
-
                             <div className="flex justify-between items-start relative z-20">
                               <span className="text-[8px] font-bold text-slate-500 uppercase leading-tight tracking-tight line-clamp-1 max-w-[80%]">{material.description}</span>
-                              <motion.div
-                                variants={{
-                                  hover: { rotate: 90, scale: 1.2 }
-                                }}
-                                className="flex items-center gap-1.5"
-                              >
-                                <span className="w-2.5 h-2.5 rounded-sm shadow-sm" style={{ backgroundColor: material.color || '#008200' }} />
-                              </motion.div>
+                              <span className="w-2.5 h-2.5 rounded-sm shadow-sm flex-shrink-0" style={{ backgroundColor: material.color || '#008200' }} />
                             </div>
-
                             <div className="mt-2 relative z-20">
                               <motion.h4
-                                variants={{
-                                  hover: { x: 2, color: material.color || '#008200' }
-                                }}
+                                variants={{ hover: { x: 2, color: material.color || '#008200' } }}
                                 className="text-[11px] font-black text-slate-700 leading-tight uppercase tracking-tight line-clamp-2 transition-colors duration-300"
                               >
                                 {material.code}
                               </motion.h4>
                             </div>
-
                             <div className="mt-auto pt-3 flex items-end justify-between border-t border-slate-50 relative z-20">
-                              <motion.div
-                                variants={{
-                                  hover: { scale: 1.05, x: 2 }
-                                }}
-                                className="flex items-baseline gap-1"
-                              >
+                              <div className="flex items-baseline gap-1">
                                 <span className="text-2xl font-black text-slate-900 leading-none tabular-nums tracking-tighter">{material.value ?? 0}</span>
                                 <span className="text-[8px] font-extrabold text-slate-400 uppercase tracking-tighter">{intl.formatMessage({ id: 'dashboard.units' })}</span>
-                              </motion.div>
+                              </div>
                               <motion.div
-                                variants={{
-                                  hover: { opacity: 1, x: 0, scale: 1 }
-                                }}
+                                variants={{ hover: { opacity: 1, x: 0, scale: 1 } }}
                                 initial={{ opacity: 0, x: -10, scale: 0.8 }}
                                 className="w-8 h-8 rounded-lg bg-slate-900 flex items-center justify-center shadow-lg"
                               >
@@ -439,35 +459,34 @@ export function Dashboard() {
                               </motion.div>
                             </div>
                           </motion.div>
-                        ))
-                          .concat(
-                            <motion.div
-                              key="total-card"
-                              initial="initial"
-                              whileHover="hover"
-                              variants={{
-                                initial: { borderRadius: '8px' },
-                                hover: { borderRadius: '24px', scale: 1.02, y: -2 }
-                              }}
-                              className="bg-gradient-to-br from-[#008200] to-green-900 border-none p-5 transition-shadow flex flex-col justify-between h-36 group shadow-xl shadow-green-900/20"
-                            >
-                              <div className="relative z-20">
-                                <span className="text-[10px] font-black text-green-100 uppercase tracking-[0.15em] block">GRAND TOTAL</span>
-                                <h4 className="text-sm font-black text-white mt-1 uppercase tracking-tight">BRARUDI S.A.</h4>
+                        )).concat(
+                          <motion.div
+                            key="total-card"
+                            initial="initial"
+                            whileHover="hover"
+                            variants={{
+                              initial: { borderRadius: '8px' },
+                              hover: { borderRadius: '24px', scale: 1.02, y: -2 }
+                            }}
+                            className="bg-gradient-to-br from-[#008200] to-green-900 border-none p-5 flex flex-col justify-between h-36 shadow-xl shadow-green-900/20"
+                          >
+                            <div className="relative z-20">
+                              <span className="text-[10px] font-black text-green-100 uppercase tracking-[0.15em] block">GRAND TOTAL</span>
+                              <h4 className="text-sm font-black text-white mt-1 uppercase tracking-tight">BRARUDI S.A.</h4>
+                            </div>
+                            <div className="mt-auto pt-3 flex items-center justify-between border-t border-green-500/30 relative z-20 gap-2">
+                              <div className="flex items-baseline gap-1">
+                                <span className="text-2xl font-black text-white leading-none tabular-nums tracking-tighter drop-shadow-md">
+                                  {materialData.reduce((acc, curr) => acc + (curr.value || 0), 0)}
+                                </span>
+                                <span className="text-[9px] font-extrabold text-green-100 uppercase tracking-tighter shrink-0">UNITÉS</span>
                               </div>
-                              <div className="mt-auto pt-3 flex items-center justify-between border-t border-green-500/30 relative z-20 gap-2">
-                                <div className="flex items-baseline gap-1">
-                                  <span className="text-2xl 2xl:text-3xl font-black text-white leading-none tabular-nums tracking-tighter drop-shadow-md">
-                                    {materialData.reduce((acc, curr) => acc + (curr.value || 0), 0)}
-                                  </span>
-                                  <span className="text-[9px] font-extrabold text-green-100 uppercase tracking-tighter shrink-0">UNITÉS</span>
-                                </div>
-                                <div className="w-8 h-8 shrink-0 rounded-lg bg-white/20 backdrop-blur-sm flex items-center justify-center border border-white/20 shadow-sm">
-                                  <Layers className="w-4 h-4 text-white" />
-                                </div>
+                              <div className="w-8 h-8 shrink-0 rounded-lg bg-white/20 flex items-center justify-center border border-white/20">
+                                <Layers className="w-4 h-4 text-white" />
                               </div>
-                            </motion.div>
-                          )
+                            </div>
+                          </motion.div>
+                        )
                       ) : (
                         <div className="col-span-full h-40 bg-white flex items-center justify-center text-slate-400 text-xs font-bold uppercase tracking-widest italic">
                           {intl.formatMessage({ id: 'inventory.no_data' })}

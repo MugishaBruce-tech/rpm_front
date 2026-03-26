@@ -67,7 +67,7 @@ export function MainLayout() {
         const response = await apiRequest(`/loans/?limit=10&offset=0`);
         const loanList: any[] = Array.isArray(response.result) ? response.result : [];
         const uid = String(user.id);
-        const incoming = loanList.filter(l => 
+        const incoming = loanList.filter(l =>
           String(l.business_partner_key) === uid && l.bp_loan_status === 'pending'
         );
         setPendingLoans(incoming);
@@ -150,8 +150,8 @@ export function MainLayout() {
 
       {/* Sidebar */}
       <aside className={`
-        fixed inset-y-0 left-0 z-[60]
-        w-72 bg-white border-r border-slate-200 flex flex-col shadow-2xl lg:shadow-none
+        fixed inset-y-0 left-0 z-[100]
+        w-[85%] sm:w-72 bg-white border-r border-slate-200 flex flex-col shadow-2xl lg:shadow-none
         transform transition-transform duration-500 cubic-bezier(0.4, 0, 0.2, 1)
         ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0 lg:static lg:transform-none'}
       `}>
@@ -173,7 +173,7 @@ export function MainLayout() {
         {/* User Profile */}
         <div className="p-6 border-b border-slate-200 mt-2 lg:mt-0">
           <div className="flex items-center gap-4">
-            <div 
+            <div
               className="w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold shadow-lg shadow-emerald-200/50"
               style={{ backgroundColor: primaryColor }}
             >
@@ -475,7 +475,7 @@ export function MainLayout() {
                         >
                           <span className="tracking-tight font-normal">{intl.formatMessage({ id: 'sidebar.brarudi_users' })}</span>
                         </Link>
-                        
+
                         <Link
                           to="/admin/business-partners"
                           onClick={() => setSidebarOpen(false)}
@@ -528,9 +528,9 @@ export function MainLayout() {
             <p className="text-xs mb-3" style={{ color: 'rgba(255, 255, 255, 0.8)' }}>
               {user.role ? (intl.messages[`role.${user.role}`] ? intl.formatMessage({ id: `role.${user.role}` }) : user.role) : intl.formatMessage({ id: 'common.connected' })}
             </p>
-            <button 
+            <button
               onClick={() => navigate('/')}
-              className="text-xs font-medium px-3 py-1.5 w-full bg-white hover:bg-slate-50 transition-colors rounded-sm" 
+              className="text-xs font-medium px-3 py-1.5 w-full bg-white hover:bg-slate-50 transition-colors rounded-sm"
               style={{ color: primaryColor }}
             >
               {intl.formatMessage({ id: 'sidebar.view_reports' })}
@@ -542,20 +542,23 @@ export function MainLayout() {
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden w-full">
         {/* Top Header */}
-        <header 
-          className="text-white px-4 sm:px-6 py-3 relative overflow-hidden" 
-          style={{ 
-            backgroundColor: '#168c17',
-            backgroundImage: `
-              linear-gradient(45deg, #107511 25%, transparent 25%), 
-              linear-gradient(-45deg, #107511 25%, transparent 25%), 
-              linear-gradient(45deg, transparent 75%, #107511 75%), 
-              linear-gradient(-45deg, transparent 75%, #107511 75%)
-            `,
-            backgroundSize: '40px 40px',
-            backgroundPosition: '0 0, 0 20px, 20px -20px, -20px 0px'
-          }}
-        >
+        <header className="relative z-50 text-white px-4 sm:px-6 py-3">
+          {/* Background Pattern Layer */}
+          <div
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              backgroundColor: '#168c17',
+              backgroundImage: `
+                linear-gradient(45deg, #107511 25%, transparent 25%),
+                linear-gradient(-45deg, #107511 25%, transparent 25%),
+                linear-gradient(45deg, transparent 75%, #107511 75%),
+                linear-gradient(-45deg, transparent 75%, #107511 75%)
+              `,
+              backgroundSize: '40px 40px',
+              backgroundPosition: '0 0, 0 20px, 20px -20px, -20px 0px'
+            }}
+          />
+
           <div className="flex items-center justify-between relative z-10">
             <div className="flex items-center gap-3 sm:gap-4">
               <button
@@ -564,10 +567,10 @@ export function MainLayout() {
               >
                 <Menu className="w-5 h-5" />
               </button>
-              
+
               <div className="flex flex-col">
-                <span className="text-[10px] font-black uppercase tracking-[0.15em] leading-none text-white/40">{getTabName()}</span>
-                <span className="hidden md:inline text-[9px] font-mono mt-0.5" style={{ color: 'rgba(255, 255, 255, 0.25)', letterSpacing: '0.05em' }}>
+                <span className="hidden sm:inline text-[10px] font-black uppercase tracking-[0.15em] leading-none text-white/40">{getTabName()}</span>
+                <span className="hidden lg:inline text-[9px] font-mono mt-0.5" style={{ color: 'rgba(255, 255, 255, 0.25)', letterSpacing: '0.05em' }}>
                   {currentTime}
                 </span>
               </div>
@@ -590,7 +593,7 @@ export function MainLayout() {
                   <img src={enFlag} alt="EN" className="w-5 h-5 sm:w-6 sm:h-6 object-cover rounded-full shadow-sm" />
                 </button>
               </div>
-              <button 
+              <button
                 onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
                 className="relative p-1.5 transition-colors hover:bg-white/10 rounded-full"
               >
@@ -607,94 +610,94 @@ export function MainLayout() {
                   <span className="text-[10px] font-black uppercase tracking-widest leading-none opacity-40">RPM Tracker</span>
                 </div>
                 <div className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center overflow-hidden">
-                   <img src={headerImageLogo} alt="Brarudi Logo" className="w-full h-full object-contain" />
+                  <img src={headerImageLogo} alt="Brarudi Logo" className="w-full h-full object-contain" />
                 </div>
               </div>
             </div>
           </div>
 
-              {/* Notifications Dropdown */}
-              {isNotificationsOpen && (
-                <>
-                  <div 
-                    className="fixed inset-0 z-40" 
-                    onClick={() => setIsNotificationsOpen(false)} 
-                  />
-                  <div className="absolute top-12 right-0 w-[360px] max-h-[480px] bg-white rounded-lg shadow-xl z-50 overflow-hidden text-slate-900 border border-slate-200 animate-in fade-in slide-in-from-top-2 duration-200">
-                    <div className="p-4 border-b border-slate-100 flex items-center justify-between">
-                      <h3 className="text-xl font-bold tracking-tight">Notifications</h3>
-                      <button className="p-1.5 hover:bg-slate-100 rounded-full transition-colors">
-                        <MoreHorizontal className="w-5 h-5 text-slate-500" />
-                      </button>
+          {/* Notifications Dropdown */}
+          {isNotificationsOpen && (
+            <>
+              <div
+                className="fixed inset-0 z-40"
+                onClick={() => setIsNotificationsOpen(false)}
+              />
+              <div className="absolute top-12 right-0 w-[320px] sm:w-[360px] max-h-[480px] bg-white rounded-lg shadow-2xl z-[110] overflow-hidden text-slate-900 border border-slate-200 animate-in fade-in slide-in-from-top-2 duration-200">
+                <div className="p-4 border-b border-slate-100 flex items-center justify-between">
+                  <h3 className="text-xl font-bold tracking-tight">Notifications</h3>
+                  <button className="p-1.5 hover:bg-slate-100 rounded-full transition-colors">
+                    <MoreHorizontal className="w-5 h-5 text-slate-500" />
+                  </button>
+                </div>
+
+                <div className="overflow-y-auto max-h-[400px]">
+                  {pendingLoans.length > 0 ? (
+                    <div className="p-2">
+                      <div className="px-2 py-1 mb-1">
+                        <h4 className="text-sm font-semibold text-slate-900">Nouveau</h4>
+                      </div>
+                      {pendingLoans.map((loan, idx) => {
+                        const materialName = loan.material?.material_name2 || loan.material?.material_description || 'Inconnu';
+                        const borrowerName = loan.borrower?.business_partner_name || loan.external_party_name || 'Inconnu';
+                        const date = new Date(loan.created_at);
+
+                        return (
+                          <Link
+                            key={loan.id || idx}
+                            to="/loans"
+                            onClick={() => setIsNotificationsOpen(false)}
+                            className="flex items-start gap-3 p-2.5 rounded-lg hover:bg-slate-50 transition-colors group relative"
+                          >
+                            <div className="relative flex-shrink-0">
+                              <div className="w-14 h-14 rounded-full bg-slate-100 flex items-center justify-center overflow-hidden border border-slate-200 shadow-sm">
+                                <User className="w-7 h-7 text-slate-400" />
+                              </div>
+                              <div className="absolute -bottom-0.5 -right-0.5 w-6 h-6 rounded-full bg-blue-600 flex items-center justify-center border-2 border-white shadow-sm">
+                                <FileText className="w-3 h-3 text-white" />
+                              </div>
+                            </div>
+                            <div className="flex-1 min-w-0 pr-4">
+                              <p className="text-xs sm:text-[14px] leading-tight text-slate-700">
+                                <span className="font-bold text-slate-900">{borrowerName}</span> a demandé un prêt de <span className="font-bold text-slate-900">{loan.bp_loan_qty_in_base_uom} {materialName}</span>.
+                              </p>
+                              <p className="text-[12px] font-semibold text-blue-600 mt-1">
+                                {formatDistanceToNow(date, {
+                                  addSuffix: true,
+                                  locale: locale === 'fr' ? fr : enUS
+                                })}
+                              </p>
+                            </div>
+                            <div className="flex-shrink-0 self-center">
+                              <div className="w-3 h-3 bg-blue-600 rounded-full" />
+                            </div>
+                          </Link>
+                        );
+                      })}
                     </div>
-                    
-                    <div className="overflow-y-auto max-h-[400px]">
-                      {pendingLoans.length > 0 ? (
-                        <div className="p-2">
-                          <div className="px-2 py-1 mb-1">
-                            <h4 className="text-sm font-semibold text-slate-900">Nouveau</h4>
-                          </div>
-                          {pendingLoans.map((loan, idx) => {
-                            const materialName = loan.material?.material_name2 || loan.material?.material_description || 'Inconnu';
-                            const borrowerName = loan.borrower?.business_partner_name || loan.external_party_name || 'Inconnu';
-                            const date = new Date(loan.created_at);
-                            
-                            return (
-                              <Link
-                                key={loan.id || idx}
-                                to="/loans"
-                                onClick={() => setIsNotificationsOpen(false)}
-                                className="flex items-start gap-3 p-2.5 rounded-lg hover:bg-slate-50 transition-colors group relative"
-                              >
-                                <div className="relative flex-shrink-0">
-                                  <div className="w-14 h-14 rounded-full bg-slate-100 flex items-center justify-center overflow-hidden border border-slate-200 shadow-sm">
-                                    <User className="w-7 h-7 text-slate-400" />
-                                  </div>
-                                  <div className="absolute -bottom-0.5 -right-0.5 w-6 h-6 rounded-full bg-blue-600 flex items-center justify-center border-2 border-white shadow-sm">
-                                    <FileText className="w-3 h-3 text-white" />
-                                  </div>
-                                </div>
-                                <div className="flex-1 min-w-0 pr-4">
-                                  <p className="text-xs sm:text-[14px] leading-tight text-slate-700">
-                                    <span className="font-bold text-slate-900">{borrowerName}</span> a demandé un prêt de <span className="font-bold text-slate-900">{loan.bp_loan_qty_in_base_uom} {materialName}</span>.
-                                  </p>
-                                  <p className="text-[12px] font-semibold text-blue-600 mt-1">
-                                    {formatDistanceToNow(date, { 
-                                      addSuffix: true, 
-                                      locale: locale === 'fr' ? fr : enUS 
-                                    })}
-                                  </p>
-                                </div>
-                                <div className="flex-shrink-0 self-center">
-                                  <div className="w-3 h-3 bg-blue-600 rounded-full" />
-                                </div>
-                              </Link>
-                            );
-                          })}
-                        </div>
-                      ) : (
-                        <div className="flex flex-col items-center justify-center py-12 px-6 text-center">
-                          <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mb-4">
-                            <Bell className="w-8 h-8 text-slate-300" />
-                          </div>
-                          <p className="text-slate-500 font-medium">Vous n'avez pas de nouvelles notifications</p>
-                          <p className="text-slate-400 text-sm mt-1">Les demandes de prêt entrantes apparaîtront ici.</p>
-                        </div>
-                      )}
+                  ) : (
+                    <div className="flex flex-col items-center justify-center py-12 px-6 text-center">
+                      <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mb-4">
+                        <Bell className="w-8 h-8 text-slate-300" />
+                      </div>
+                      <p className="text-slate-500 font-medium">Vous n'avez pas de nouvelles notifications</p>
+                      <p className="text-slate-400 text-sm mt-1">Les demandes de prêt entrantes apparaîtront ici.</p>
                     </div>
-                    
-                    <div className="p-3 border-t border-slate-100 bg-slate-50/30 text-center">
-                      <Link 
-                        to="/loans"
-                        onClick={() => setIsNotificationsOpen(false)}
-                        className="text-sm font-semibold text-blue-600 hover:underline"
-                      >
-                        Voir toutes les demandes
-                      </Link>
-                    </div>
-                  </div>
-                </>
-              )}
+                  )}
+                </div>
+
+                <div className="p-3 border-t border-slate-100 bg-slate-50/30 text-center">
+                  <Link
+                    to="/loans"
+                    onClick={() => setIsNotificationsOpen(false)}
+                    className="text-sm font-semibold text-blue-600 hover:underline"
+                  >
+                    Voir toutes les demandes
+                  </Link>
+                </div>
+              </div>
+            </>
+          )}
         </header>
 
 
@@ -703,7 +706,7 @@ export function MainLayout() {
         <main className="flex-1 overflow-auto">
           <Outlet />
         </main>
-        
+
         <OfflineStatus />
       </div>
     </div>
