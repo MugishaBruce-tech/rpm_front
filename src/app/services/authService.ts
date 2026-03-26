@@ -51,16 +51,16 @@ export const authService = {
         localStorage.setItem('rpm-tracker-auth-refresh', data.result.REFRESH_TOKEN);
       }
       
-      const permissions = data.result.profil?.permissions?.map((p: any) => p.code) || [];
+      const permissions = data.result.profil?.permissions?.map((p: any) => p.code) || data.result.user?.profil?.permissions?.map((p: any) => p.code) || [];
       
       const mappedUser = {
-        id: (data.result.id || data.result.business_partner_key).toString(),
-        name: data.result.name || data.result.business_partner_name,
-        email: data.result.email || data.result.user_ad,
-        region: data.result.region,
-        role: data.result.profil?.CODE_PROFIL || data.result.business_partner_type,
+        id: (data.result.id || data.result.business_partner_key || data.result.user?.id || data.result.user?.business_partner_key || '').toString(),
+        name: data.result.name || data.result.business_partner_name || data.result.user?.name || data.result.user?.business_partner_name,
+        email: data.result.email || data.result.user_ad || data.result.user?.email || data.result.user?.user_ad,
+        region: data.result.region || data.result.user?.region,
+        role: data.result.profil?.CODE_PROFIL || data.result.user?.profil?.CODE_PROFIL || data.result.business_partner_type || data.result.user?.business_partner_type,
         permissions: permissions,
-        is_internal: data.result.is_internal || false
+        is_internal: data.result.is_internal || data.result.user?.is_internal || false
       };
       
       localStorage.setItem('rpm-tracker-auth-user', JSON.stringify(mappedUser));

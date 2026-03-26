@@ -63,7 +63,9 @@ export const Login: React.FC = () => {
         if (user) {
           localStorage.setItem('rpm-tracker-auth-user', JSON.stringify(user));
           // Clear query params and redirect to home using href to force context reload
-          window.location.href = '/';
+          setTimeout(() => {
+            window.location.href = '/';
+          }, 100);
         }
       }).catch(err => {
         console.error("Failed to fetch profile after Google login", err);
@@ -119,7 +121,10 @@ export const Login: React.FC = () => {
       const user = await authService.verifyOTP(mfaCode, activeToken);
       if (user) {
         toast.success(intl.formatMessage({ id: 'login.mfa_success' }));
-        window.location.href = '/';
+        // Add a small delay to ensure localStorage is updated before redirecting
+        setTimeout(() => {
+          window.location.href = '/';
+        }, 100);
       } else {
         toast.error(intl.formatMessage({ id: 'login.mfa_invalid' }));
       }
