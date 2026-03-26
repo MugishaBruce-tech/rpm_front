@@ -45,10 +45,18 @@ export const authService = {
       body: JSON.stringify({ token: otp, mfa_token: mfaToken }),
     });
 
+    console.log('[verifyOTP] Raw backend data:', data);
+
     if (data.result) {
-      if (data.result.TOKEN) {
-        localStorage.setItem('rpm-tracker-auth-token', data.result.TOKEN);
-        localStorage.setItem('rpm-tracker-auth-refresh', data.result.REFRESH_TOKEN);
+      const token = data.result?.TOKEN || data.result?.token || data.token || data.TOKEN || data.result?.user?.token || data.result?.user?.TOKEN;
+      const refresh = data.result?.REFRESH_TOKEN || data.result?.refresh_token || data.refresh_token || data.REFRESH_TOKEN || data.result?.user?.refresh_token;
+
+      if (token) {
+        console.log('[verifyOTP] Token found and saved');
+        localStorage.setItem('rpm-tracker-auth-token', token);
+        if (refresh) localStorage.setItem('rpm-tracker-auth-refresh', refresh);
+      } else {
+        console.warn('[verifyOTP] Login reported success but NO TOKEN WAS FOUND in:', data);
       }
       
       const permissions = data.result.profil?.permissions?.map((p: any) => p.code) || data.result.user?.profil?.permissions?.map((p: any) => p.code) || [];

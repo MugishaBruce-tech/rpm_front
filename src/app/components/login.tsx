@@ -119,13 +119,15 @@ export const Login: React.FC = () => {
     setLoading(true);
     try {
       const user = await authService.verifyOTP(mfaCode, activeToken);
-      if (user) {
+      console.log('[Login] verifyOTP result:', user);
+      
+      if (user && user.id) {
         toast.success(intl.formatMessage({ id: 'login.mfa_success' }));
-        // Add a small delay to ensure localStorage is updated before redirecting
-        setTimeout(() => {
-          window.location.href = '/';
-        }, 100);
+        // Using navigate instead of href for better reliability in SPA
+        console.log('[Login] Navigating to /');
+        navigate('/', { replace: true });
       } else {
+        console.warn('[Login] verifyOTP failed to return a valid user object');
         toast.error(intl.formatMessage({ id: 'login.mfa_invalid' }));
       }
     } catch (error: any) {

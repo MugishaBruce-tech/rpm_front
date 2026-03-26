@@ -35,6 +35,8 @@ export function MainLayout() {
   // Safety check: If for some reason we are in MainLayout without a user, redirect to login
   useEffect(() => {
     if (!authService.isAuthenticated() || !user) {
+      console.warn('[MainLayout] Authentication check failed. Redirecting...');
+      toast.error('Session non trouvée. Redirection vers la connexion...');
       navigate('/login', { replace: true });
     }
   }, [user, navigate]);
