@@ -247,10 +247,12 @@ export const dashboardService = {
       materialsList.forEach((m: any) => {
         const name = m.material_description || m.global_material_id || `Material ${m.material_key}`;
         materialMap[name] = {
-          name,
-          physical: 0,
-          loaned: 0,
-          borrowed: 0
+          materialDescription: name,
+          material_name2: m.material_name2,
+          physicalQty: 0,
+          lentQty: 0,
+          borrowedQty: 0,
+          netOwned: 0
         };
       });
 
@@ -258,15 +260,18 @@ export const dashboardService = {
         const name = materialLookup[record.materialKey] || record.material?.material_description || record.sku || `Material ${record.materialKey}`;
         if (!materialMap[name]) {
           materialMap[name] = {
-            name,
-            physical: 0,
-            loaned: 0,
-            borrowed: 0
+            materialDescription: name,
+            material_name2: record.material_name2 || record.material?.material_name2,
+            physicalQty: 0,
+            lentQty: 0,
+            borrowedQty: 0,
+            netOwned: 0
           };
         }
-        materialMap[name].physical += record.physicalQty;
-        materialMap[name].loaned += (record.lentQty || 0);
-        materialMap[name].borrowed += (record.borrowedQty || 0);
+        materialMap[name].physicalQty += (record.physicalQty || 0);
+        materialMap[name].lentQty += (record.lentQty || record.loaned || 0);
+        materialMap[name].borrowedQty += (record.borrowedQty || 0);
+        materialMap[name].netOwned = materialMap[name].physicalQty + materialMap[name].borrowedQty - materialMap[name].lentQty;
       });
 
       return Object.values(materialMap);
