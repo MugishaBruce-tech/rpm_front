@@ -23,6 +23,7 @@ interface LoanItem {
   material?: {
     material_description: string;
     global_material_id?: string;
+    material_name2?: string;
   };
   lender?: {
     business_partner_name: string;
@@ -91,13 +92,13 @@ export const PartnerDetailsModal: React.FC<PartnerDetailsModalProps> = ({
 
   return (
     <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[85vh] flex flex-col overflow-hidden border border-slate-200">
+      <div className="bg-white rounded-lg shadow-2xl w-full max-w-md max-h-[85vh] flex flex-col overflow-hidden border border-slate-200">
         {/* Header */}
-        <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between bg-white">
+        <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-white">
           <div>
-            <h3 className="text-lg font-black text-slate-900 uppercase tracking-tight">{partnerName}</h3>
-            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">
-              {type === 'stock' ? 'Regional Inventory Details' : 'Regional Loan Details'}
+            <h3 className="text-lg font-semibold text-slate-900">{partnerName}</h3>
+            <p className="text-xs text-slate-500 mt-0.5">
+              {type === 'stock' ? 'Inventory Details' : 'Loan Details'}
             </p>
           </div>
           <button
@@ -110,12 +111,12 @@ export const PartnerDetailsModal: React.FC<PartnerDetailsModalProps> = ({
 
         {/* Tabs for Loans */}
         {type === 'loans' && (
-          <div className="border-b border-slate-100 bg-white flex">
+          <div className="border-b border-slate-200 bg-slate-50 flex">
             <button
               onClick={() => setActiveTab('incoming')}
-              className={`flex-1 px-4 py-3 text-center text-xs font-bold uppercase tracking-wider transition-all border-b-2 ${
+              className={`flex-1 px-3 py-2.5 text-center text-xs font-medium transition-all border-b-2 ${
                 activeTab === 'incoming'
-                  ? 'border-emerald-500 text-emerald-600 bg-emerald-50/30'
+                  ? 'border-slate-900 text-slate-900 bg-white'
                   : 'border-transparent text-slate-400 hover:text-slate-600'
               }`}
             >
@@ -123,9 +124,9 @@ export const PartnerDetailsModal: React.FC<PartnerDetailsModalProps> = ({
             </button>
             <button
               onClick={() => setActiveTab('outgoing')}
-              className={`flex-1 px-4 py-3 text-center text-xs font-bold uppercase tracking-wider transition-all border-b-2 ${
+              className={`flex-1 px-3 py-2.5 text-center text-xs font-medium transition-all border-b-2 ${
                 activeTab === 'outgoing'
-                  ? 'border-emerald-500 text-emerald-600 bg-emerald-50/30'
+                  ? 'border-slate-900 text-slate-900 bg-white'
                   : 'border-transparent text-slate-400 hover:text-slate-600'
               }`}
             >
@@ -135,44 +136,44 @@ export const PartnerDetailsModal: React.FC<PartnerDetailsModalProps> = ({
         )}
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto p-6 bg-slate-50/50">
+        <div className="flex-1 overflow-y-auto p-4 bg-slate-50/50">
           {loading ? (
-            <div className="space-y-3">
-              <Skeleton className="h-20 w-full rounded-xl" />
-              <Skeleton className="h-20 w-full rounded-xl" />
-              <Skeleton className="h-20 w-full rounded-xl" />
+            <div className="space-y-2">
+              <Skeleton className="h-16 w-full rounded-lg" />
+              <Skeleton className="h-16 w-full rounded-lg" />
+              <Skeleton className="h-16 w-full rounded-lg" />
             </div>
           ) : filteredData && Array.isArray(filteredData) && filteredData.length > 0 ? (
-            <div className="grid grid-cols-1 gap-3">
+            <div className="grid grid-cols-1 gap-2">
               {filteredData.map((item: any, idx: number) => {
                 if (type === 'stock') {
                   const stockItem = item as StockItem;
                   return (
                     <div 
                       key={stockItem.materialDescription || idx} 
-                      className="bg-white border border-slate-100 rounded-xl p-4 shadow-sm hover:shadow-md transition-all group"
+                      className="bg-white border border-slate-100 rounded-md p-3 hover:bg-slate-50 transition-all"
                     >
-                      <div className="flex justify-between items-start gap-4">
+                      <div className="flex justify-between items-start gap-3">
                         <div className="flex-1 min-w-0">
-                          <h4 className="font-bold text-slate-800 text-sm truncate">
+                          <h4 className="font-medium text-slate-900 text-xs truncate">
                             {stockItem.materialDescription}
                           </h4>
                           {stockItem.material_name2 && (
-                            <div className="inline-block mt-1 px-1.5 py-0.5 bg-slate-100 text-[10px] font-black text-slate-500 rounded uppercase tracking-wider">
+                            <p className="text-[10px] text-slate-500 mt-0.5">
                               {stockItem.material_name2}
-                            </div>
+                            </p>
                           )}
                         </div>
                         
-                        <div className="flex items-center gap-6 shrink-0">
+                        <div className="flex items-center gap-4 shrink-0">
                           <div className="text-right">
-                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Qty</p>
-                            <p className="text-sm font-black text-slate-900">{stockItem.physicalQty}</p>
+                            <p className="text-[10px] text-slate-500">Quantity</p>
+                            <p className="text-sm font-semibold text-slate-900">{stockItem.physicalQty}</p>
                           </div>
                           
-                          <div className="text-right border-l border-slate-100 pl-6">
-                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Balance</p>
-                            <p className={`text-sm font-black ${stockItem.netOwned! >= 0 ? "text-emerald-600" : "text-rose-600"}`}>
+                          <div className="text-right">
+                            <p className="text-[10px] text-slate-500">Balance</p>
+                            <p className={`text-sm font-semibold ${stockItem.netOwned! >= 0 ? "text-emerald-600" : "text-rose-600"}`}>
                               {stockItem.netOwned! > 0 ? "+" : ""}{stockItem.netOwned}
                             </p>
                           </div>
@@ -182,42 +183,47 @@ export const PartnerDetailsModal: React.FC<PartnerDetailsModalProps> = ({
                   );
                 } else {
                   const loanItem = item as LoanItem;
-                  const statusColors: Record<string, string> = {
-                    'pending': 'bg-yellow-50 text-yellow-600',
-                    'open': 'bg-blue-50 text-blue-600',
-                    'active': 'bg-blue-50 text-blue-600',
-                    'closed': 'bg-green-50 text-green-600',
-                    'cancelled': 'bg-red-50 text-red-600',
-                    'overdue': 'bg-red-50 text-red-600',
-                  };
+                  const partnerInfo = activeTab === 'incoming' ? loanItem.borrower?.business_partner_name : loanItem.lender?.business_partner_name;
                   
                   return (
                     <div 
                       key={loanItem.business_partner_empties_loan_key || idx} 
-                      className="bg-white border border-slate-100 rounded-xl p-4 shadow-sm hover:shadow-md transition-all group"
+                      className="bg-white border border-slate-100 rounded-md p-3 hover:bg-slate-50 transition-all"
                     >
-                      <div className="flex justify-between items-start gap-4">
+                      <div className="flex justify-between items-start gap-3">
                         <div className="flex-1 min-w-0">
-                          <h4 className="font-bold text-slate-800 text-sm truncate">
-                            {loanItem.material?.material_description || 'Unknown Material'}
+                          <h4 className="font-medium text-slate-900 text-xs truncate">
+                            {loanItem.material?.material_description || 'Unknown'}
                           </h4>
-                          {loanItem.material?.global_material_id && (
-                            <div className="inline-block mt-1 px-1.5 py-0.5 bg-slate-100 text-[10px] font-black text-slate-500 rounded uppercase tracking-wider">
-                              {loanItem.material.global_material_id}
-                            </div>
+                          {loanItem.material?.material_name2 && (
+                            <p className="text-[10px] text-slate-500 mt-0.5">
+                              SKU: {loanItem.material.material_name2}
+                            </p>
+                          )}
+                          {partnerInfo && (
+                            <p className="text-[10px] text-slate-400 mt-1">
+                              {activeTab === 'incoming' ? 'To: ' : 'From: '} <span className="text-slate-600 font-medium">{partnerInfo}</span>
+                            </p>
                           )}
                         </div>
                         
-                        <div className="flex items-center gap-4 shrink-0">
-                          <div className="text-right">
-                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Qty</p>
-                            <p className="text-sm font-black text-slate-900">{loanItem.bp_loan_qty_in_base_uom}</p>
+                        <div className="flex items-center gap-3 shrink-0 text-right">
+                          <div>
+                            <p className="text-[10px] text-slate-500">Qty</p>
+                            <p className="text-sm font-semibold text-slate-900">{loanItem.bp_loan_qty_in_base_uom}</p>
                           </div>
                           
-                          <div className="text-right border-l border-slate-100 pl-4">
-                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Status</p>
-                            <span className={`inline-block text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded ${statusColors[loanItem.bp_loan_status] || 'bg-slate-50 text-slate-600'}`}>
-                              {loanItem.bp_loan_status}
+                          <div>
+                            <p className="text-[10px] text-slate-500">Status</p>
+                            <span className={`inline-block text-[10px] font-medium px-2 py-0.5 rounded-full ${
+                              loanItem.bp_loan_status === 'pending' ? 'bg-yellow-100 text-yellow-700' :
+                              loanItem.bp_loan_status === 'open' || loanItem.bp_loan_status === 'active' ? 'bg-blue-100 text-blue-700' :
+                              loanItem.bp_loan_status === 'closed' ? 'bg-green-100 text-green-700' :
+                              loanItem.bp_loan_status === 'cancelled' ? 'bg-red-100 text-red-700' :
+                              loanItem.bp_loan_status === 'overdue' ? 'bg-red-100 text-red-700' :
+                              'bg-slate-100 text-slate-600'
+                            }`}>
+                              {loanItem.bp_loan_status.charAt(0).toUpperCase() + loanItem.bp_loan_status.slice(1)}
                             </span>
                           </div>
                         </div>
@@ -228,11 +234,8 @@ export const PartnerDetailsModal: React.FC<PartnerDetailsModalProps> = ({
               })}
             </div>
           ) : (
-            <div className="py-12 text-center">
-              <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-slate-100 text-slate-400 mb-3">
-                <X className="w-6 h-6 opacity-20" />
-              </div>
-              <p className="text-xs font-bold text-slate-400 uppercase tracking-[0.2em]">
+            <div className="py-8 text-center">
+              <p className="text-xs text-slate-400">
                 {type === 'loans' ? `No ${activeTab === 'incoming' ? 'lending out' : 'borrowing in'} transactions` : 'No data available'}
               </p>
             </div>
@@ -240,12 +243,12 @@ export const PartnerDetailsModal: React.FC<PartnerDetailsModalProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 border-t border-slate-100 flex justify-end bg-white">
+        <div className="px-5 py-3 border-t border-slate-100 flex justify-end bg-white">
           <button
             onClick={onClose}
-            className="px-6 py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-[11px] font-black uppercase tracking-widest rounded-lg transition-all shadow-sm"
+            className="px-4 py-1.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-medium rounded-lg transition-all"
           >
-            Close
+            Done
           </button>
         </div>
       </div>

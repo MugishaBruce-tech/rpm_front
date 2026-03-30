@@ -99,16 +99,16 @@ function OPCOUsersList() {
                 <Users className="w-5 h-5" />
               </div>
               <div>
-                <CardTitle className="text-xl font-black uppercase tracking-tight">{intl.formatMessage({ id: 'opco.users_title' })}</CardTitle>
-                <p className="text-[10px] text-slate-500 mt-0.5 uppercase tracking-widest font-bold">
+                <CardTitle className="text-lg font-semibold">{intl.formatMessage({ id: 'opco.users_title' })}</CardTitle>
+                <p className="text-xs text-slate-500 mt-0.5 font-normal">
                   {intl.formatMessage({ id: 'opco.users_desc' })}
                 </p>
               </div>
             </div>
             {pagination && (
               <div className="text-right hidden sm:block">
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{intl.formatMessage({ id: 'opco.total_population' })}</p>
-                <p className="text-xl font-black text-slate-900 leading-none">{pagination.total}</p>
+                <p className="text-xs font-normal text-slate-500">{intl.formatMessage({ id: 'opco.total_population' })}</p>
+                <p className="text-xl font-semibold text-slate-900 leading-none">{pagination.total}</p>
               </div>
             )}
           </div>
@@ -117,19 +117,19 @@ function OPCOUsersList() {
           {(isOPCO || isMD) && availableRegions.length > 0 && (
             <div className="flex items-center gap-2 flex-wrap">
               <Globe className="w-3.5 h-3.5 text-slate-400" />
-              <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Region:</span>
+              <span className="text-xs font-normal text-slate-500">Region:</span>
               <button
                 onClick={() => { setSelectedRegion(null); setPage(1); }}
-                className={`px-3 py-1 rounded text-[10px] font-black uppercase tracking-wider transition-all ${selectedRegion === null
+                className={`px-3 py-1 rounded text-xs font-medium transition-all ${selectedRegion === null
                     ? 'bg-[#168c17] text-white shadow-sm'
                     : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
                   }`}
-              >ALL</button>
+              >All</button>
               {availableRegions.map(r => (
                 <button
                   key={r}
                   onClick={() => { setSelectedRegion(r); setPage(1); }}
-                  className={`px-3 py-1 rounded text-[10px] font-black uppercase tracking-wider transition-all ${selectedRegion === r
+                  className={`px-3 py-1 rounded text-xs font-medium transition-all ${selectedRegion === r
                       ? 'bg-[#168c17] text-white shadow-sm'
                       : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
                     }`}
@@ -154,11 +154,11 @@ function OPCOUsersList() {
             <Table>
               <TableHeader className="bg-slate-50/50">
                 <TableRow className="hover:bg-transparent border-slate-100">
-                  <TableHead className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">{intl.formatMessage({ id: 'opco.table.partner_identity' })}</TableHead>
-                  <TableHead className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">{intl.formatMessage({ id: 'users.form.profile' })}</TableHead>
-                  <TableHead className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">{intl.formatMessage({ id: 'opco.table.region_channel' })}</TableHead>
-                  <TableHead className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">{intl.formatMessage({ id: 'opco.table.status' })}</TableHead>
-                  <TableHead className="px-6 py-4 text-right text-[10px] font-bold text-slate-400 uppercase tracking-widest">{intl.formatMessage({ id: 'opco.table.activity' })}</TableHead>
+                  <TableHead className="px-6 py-4 text-xs font-medium text-slate-500">{intl.formatMessage({ id: 'opco.table.partner_identity' })}</TableHead>
+                  <TableHead className="px-6 py-4 text-xs font-medium text-slate-500">{intl.formatMessage({ id: 'users.form.profile' })}</TableHead>
+                  <TableHead className="px-6 py-4 text-xs font-medium text-slate-500">{intl.formatMessage({ id: 'opco.table.region_channel' })}</TableHead>
+                  <TableHead className="px-6 py-4 text-xs font-medium text-slate-500">{intl.formatMessage({ id: 'opco.table.status' })}</TableHead>
+                  <TableHead className="px-6 py-4 text-right text-xs font-medium text-slate-500">{intl.formatMessage({ id: 'opco.table.activity' })}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -175,16 +175,16 @@ function OPCOUsersList() {
                     <TableRow key={user.business_partner_key} className="hover:bg-slate-50/30 transition-all border-slate-100 group">
                       <TableCell className="px-6 py-4">
                         <div className="flex items-center gap-4">
-                          <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center shrink-0 text-slate-500 font-bold group-hover:bg-white group-hover:shadow-sm transition-all border border-slate-50">
+                          <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center shrink-0 text-slate-500 font-medium group-hover:bg-white group-hover:shadow-sm transition-all border border-slate-50">
                             {user.business_partner_name.charAt(0).toUpperCase()}
                           </div>
                           <div>
-                            <h4 className="text-[13px] font-bold text-[#004a99] group-hover:text-emerald-700 transition-colors">
+                            <h4 className="text-sm font-semibold text-[#004a99] group-hover:text-emerald-700 transition-colors">
                               {user.business_partner_name}
                             </h4>
                             <div className="flex items-center gap-1.5 mt-0.5">
                               <Mail className="w-3 h-3 text-slate-300" />
-                              <span className="text-[11px] text-slate-400 font-medium">{user.user_ad}</span>
+                              <span className="text-xs text-slate-400 font-normal">{user.user_ad}</span>
                             </div>
                           </div>
                         </div>
@@ -219,7 +219,7 @@ function OPCOUsersList() {
                           }
 
                           return (
-                            <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-tight border ${badgeStyle.bg} ${badgeStyle.text} ${badgeStyle.border}`}>
+                            <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium border ${badgeStyle.bg} ${badgeStyle.text} ${badgeStyle.border}`}>
                               {profileCode}
                             </span>
                           );
@@ -229,21 +229,21 @@ function OPCOUsersList() {
                         <div className="space-y-1">
                           <div className="flex items-center gap-1.5">
                             <MapPin className="w-3 h-3 text-slate-300" />
-                            <span className="text-[10px] font-bold bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded uppercase tracking-wider">
+                            <span className="text-xs font-medium bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded">
                               {user.region || intl.formatMessage({ id: 'opco.global' })}
                             </span>
                           </div>
                           <div className="flex items-center gap-1.5 pl-0.5">
                             <Shield className="w-3 h-3 text-slate-300" />
-                            <span className="text-[10px] text-slate-400 font-bold uppercase tracking-tight">
-                              {user.customer_channel || user.business_partner_type || 'PARTNER'}
+                            <span className="text-xs text-slate-600 font-medium">
+                              {user.customer_channel || user.business_partner_type || 'Partner'}
                             </span>
                           </div>
                         </div>
                       </TableCell>
                       <TableCell className="px-6 py-4">
                         <Badge
-                          className={`text-[9px] font-bold uppercase tracking-widest ${user.business_partner_status === 'active'
+                          className={`text-xs font-medium ${user.business_partner_status === 'active'
                               ? 'bg-emerald-50 text-emerald-600 border-emerald-100'
                               : 'bg-rose-50 text-rose-600 border-rose-100'
                             }`}
@@ -254,11 +254,11 @@ function OPCOUsersList() {
                       </TableCell>
                       <TableCell className="px-6 py-4 text-right">
                         <div className="flex flex-col items-end">
-                          <div className="flex items-center gap-1 text-[10px] font-bold text-slate-900 uppercase">
+                          <div className="flex items-center gap-1 text-xs font-medium text-slate-900">
                             <Activity className="w-3 h-3 text-emerald-500" />
                             <span>ID: {user.business_partner_key}</span>
                           </div>
-                          <p className="text-[9px] text-slate-400 font-bold uppercase mt-1">
+                          <p className="text-xs text-slate-400 font-normal mt-1">
                             {intl.formatMessage({ id: 'opco.last' })}: {user.last_login_at ? new Date(user.last_login_at).toLocaleDateString() : intl.formatMessage({ id: 'users.last_login_never' })}
                           </p>
                         </div>
@@ -269,7 +269,7 @@ function OPCOUsersList() {
                   <TableRow>
                     <TableCell colSpan={5} className="py-20 text-center">
                       <Users className="w-12 h-12 text-slate-100 mx-auto mb-3" />
-                      <p className="text-[10px] font-black text-slate-300 uppercase tracking-[0.3em]">{intl.formatMessage({ id: 'opco.no_users' })}</p>
+                      <p className="text-xs font-normal text-slate-400">{intl.formatMessage({ id: 'opco.no_users' })}</p>
                     </TableCell>
                   </TableRow>
                 )}
@@ -302,7 +302,7 @@ function OPCOUsersList() {
                     <button
                       key={pNum}
                       onClick={() => setPage(pNum)}
-                      className={`w-7 h-7 flex items-center justify-center rounded-full text-xs font-bold transition-all ${isActive
+                      className={`w-7 h-7 flex items-center justify-center rounded-full text-xs font-medium transition-all ${isActive
                           ? 'bg-[#ec4899] text-white shadow-sm shadow-pink-200'
                           : 'text-slate-400 hover:bg-slate-50'
                         }`}
@@ -339,7 +339,7 @@ function OPCOUsersList() {
         )}
       </Card>
       {/* FOOTER */}
-      <div className="flex justify-between items-center text-[8px] font-bold text-slate-400 uppercase tracking-[0.2em] px-1 mt-6">
+      <div className="flex justify-between items-center text-xs font-normal text-slate-400 px-1 mt-6">
         <span>{intl.formatMessage({ id: 'opco.system_version' }, { type: isOPCO ? 'OPCO' : 'DDM' })}</span>
         <span className="text-[7px] opacity-40">{intl.formatMessage({ id: 'opco.copyright' })}</span>
         <span>{intl.formatMessage({ id: 'opco.standard_protocol' })}</span>
@@ -406,8 +406,8 @@ function OPCODirectory({ type, title, icon: Icon }: { type: 'stock' | 'loans', t
               <Icon className="w-5 h-5" />
             </div>
             <div>
-              <CardTitle className="text-xl font-bold uppercase tracking-tight">{title}</CardTitle>
-              <p className="text-[10px] text-slate-500 mt-1 uppercase tracking-wide font-bold">
+              <CardTitle className="text-lg font-semibold">{title}</CardTitle>
+              <p className="text-xs text-slate-500 mt-1 font-normal">
                 {intl.formatMessage({ id: 'opco.select_partner_desc' }, { type })}
               </p>
             </div>
@@ -417,19 +417,19 @@ function OPCODirectory({ type, title, icon: Icon }: { type: 'stock' | 'loans', t
           {(isOPCO || isMD) && availableRegions.length > 0 && (
             <div className="flex items-center gap-2 flex-wrap">
               <Globe className="w-3.5 h-3.5 text-slate-400" />
-              <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Region:</span>
+              <span className="text-xs font-normal text-slate-500">Region:</span>
               <button
                 onClick={() => { setSelectedRegion(null); setPage(1); }}
-                className={`px-3 py-1 rounded text-[10px] font-black uppercase tracking-wider transition-all ${selectedRegion === null
+                className={`px-3 py-1 rounded text-xs font-medium transition-all ${selectedRegion === null
                     ? 'bg-[#168c17] text-white shadow-sm'
                     : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
                   }`}
-              >ALL</button>
+              >All</button>
               {availableRegions.map(r => (
                 <button
                   key={r}
                   onClick={() => { setSelectedRegion(r); setPage(1); }}
-                  className={`px-3 py-1 rounded text-[10px] font-black uppercase tracking-wider transition-all ${selectedRegion === r
+                  className={`px-3 py-1 rounded text-xs font-medium transition-all ${selectedRegion === r
                       ? 'bg-[#168c17] text-white shadow-sm'
                       : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
                     }`}
@@ -454,10 +454,10 @@ function OPCODirectory({ type, title, icon: Icon }: { type: 'stock' | 'loans', t
             <Table>
               <TableHeader className="bg-slate-50/50">
                 <TableRow className="hover:bg-transparent border-slate-100">
-                  <TableHead className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">{intl.formatMessage({ id: 'opco.table.partner_identity' })}</TableHead>
-                  <TableHead className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">{intl.formatMessage({ id: 'opco.table.region_channel' })}</TableHead>
-                  <TableHead className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">{intl.formatMessage({ id: 'opco.table.status' })}</TableHead>
-                  <TableHead className="px-6 py-4 text-right text-[10px] font-bold text-slate-400 uppercase tracking-widest">{intl.formatMessage({ id: 'opco.table.actions' })}</TableHead>
+                  <TableHead className="px-6 py-4 text-xs font-medium text-slate-500">{intl.formatMessage({ id: 'opco.table.partner_identity' })}</TableHead>
+                  <TableHead className="px-6 py-4 text-xs font-medium text-slate-500">{intl.formatMessage({ id: 'opco.table.region_channel' })}</TableHead>
+                  <TableHead className="px-6 py-4 text-xs font-medium text-slate-500">{intl.formatMessage({ id: 'opco.table.status' })}</TableHead>
+                  <TableHead className="px-6 py-4 text-right text-xs font-medium text-slate-500">{intl.formatMessage({ id: 'opco.table.actions' })}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -494,16 +494,16 @@ function OPCODirectory({ type, title, icon: Icon }: { type: 'stock' | 'loans', t
                       <TableRow key={uniqueKey} className="hover:bg-slate-50/30 border-slate-100 group transition-all">
                         <TableCell className="px-6 py-4">
                           <div className="flex items-center gap-4">
-                            <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center shrink-0 text-slate-500 font-bold group-hover:bg-white group-hover:shadow-sm transition-all border border-slate-50">
+                            <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center shrink-0 text-slate-500 font-medium group-hover:bg-white group-hover:shadow-sm transition-all border border-slate-50">
                               {partner.name.charAt(0).toUpperCase()}
                             </div>
                             <div>
-                              <h4 className="text-[13px] font-bold text-[#004a99] group-hover:text-emerald-700 transition-colors">
+                              <h4 className="text-sm font-semibold text-[#004a99] group-hover:text-emerald-700 transition-colors">
                                 {partner.name}
                               </h4>
                               <div className="flex items-center gap-1.5">
                                 <Mail className="w-3 h-3 text-slate-300" />
-                                <span className="text-[10px] text-slate-400 font-bold">{partner.email || partner.id}</span>
+                                <span className="text-xs text-slate-400 font-normal">{partner.email || partner.id}</span>
                               </div>
                             </div>
                           </div>
@@ -511,20 +511,20 @@ function OPCODirectory({ type, title, icon: Icon }: { type: 'stock' | 'loans', t
                         <TableCell className="px-6 py-4">
                           <div className="flex items-center gap-1.5">
                             <MapPin className="w-3 h-3 text-slate-300" />
-                            <span className="text-[10px] font-bold bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded uppercase tracking-wider border border-slate-100">
+                            <span className="text-xs font-medium bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded border border-slate-100">
                               {partner.region || 'GLOBAL'}
                             </span>
                           </div>
                           <div className="flex items-center gap-1.5 mt-1 pl-0.5">
                             <Shield className="w-3 h-3 text-slate-300" />
-                            <span className="text-[10px] text-slate-400 font-bold uppercase tracking-tight">
+                            <span className="text-xs text-slate-600 font-medium">
                               {partner.channel || partner.role || 'PARTNER'}
                             </span>
                           </div>
                         </TableCell>
                         <TableCell className="px-6 py-4">
                           <Badge
-                            className={`text-[9px] font-bold uppercase tracking-widest ${(partner.status?.toLowerCase() === 'active')
+                            className={`text-xs font-medium ${(partner.status?.toLowerCase() === 'active')
                                 ? 'bg-emerald-50 text-emerald-600 border-emerald-100'
                                 : 'bg-rose-50 text-rose-600 border-rose-100'
                               }`}
@@ -538,7 +538,7 @@ function OPCODirectory({ type, title, icon: Icon }: { type: 'stock' | 'loans', t
                             onClick={() => handleOpenDetails(partner)}
                             variant="ghost"
                             size="sm"
-                            className="h-8 px-2 sm:px-3 text-[10px] font-bold uppercase tracking-widest text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 transition-all gap-1.5"
+                            className="h-8 px-2 sm:px-3 text-xs font-medium text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 transition-all gap-1.5"
                             title={intl.formatMessage({ id: 'opco.details_btn' })}
                           >
                             <span className="hidden sm:inline">{intl.formatMessage({ id: 'opco.details_btn' })}</span> <ChevronRight className="w-3 h-3" />
@@ -551,7 +551,7 @@ function OPCODirectory({ type, title, icon: Icon }: { type: 'stock' | 'loans', t
                   <TableRow>
                     <TableCell colSpan={4} className="py-20 text-center">
                       <Package className="w-12 h-12 text-slate-100 mx-auto mb-3" />
-                      <p className="text-[10px] font-black text-slate-300 uppercase tracking-[0.3em]">{intl.formatMessage({ id: 'opco.no_partners' })}</p>
+                      <p className="text-xs font-normal text-slate-400">{intl.formatMessage({ id: 'opco.no_partners' })}</p>
                     </TableCell>
                   </TableRow>
                 )}
@@ -583,7 +583,7 @@ function OPCODirectory({ type, title, icon: Icon }: { type: 'stock' | 'loans', t
                     <button
                       key={pNum}
                       onClick={() => setPage(pNum)}
-                      className={`w-7 h-7 flex items-center justify-center rounded-full text-xs font-bold transition-all ${isActive
+                      className={`w-7 h-7 flex items-center justify-center rounded-full text-xs font-medium transition-all ${isActive
                           ? 'bg-[#ec4899] text-white shadow-sm shadow-pink-200'
                           : 'text-slate-400 hover:bg-slate-50'
                         }`}
@@ -631,7 +631,7 @@ function OPCODirectory({ type, title, icon: Icon }: { type: 'stock' | 'loans', t
         currentUserId={currentUser?.id || currentUser?.business_partner_key}
       />
       {/* FOOTER */}
-      <div className="flex justify-center items-center text-[7px] font-bold text-slate-400 uppercase tracking-[0.2em] px-1 mt-auto pt-10 opacity-40">
+      <div className="flex justify-center items-center text-xs font-normal text-slate-400 px-1 mt-auto pt-10 opacity-40">
         <span>{intl.formatMessage({ id: 'opco.copyright' })}</span>
       </div>
     </div>
