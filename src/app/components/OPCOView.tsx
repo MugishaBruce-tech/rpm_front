@@ -8,6 +8,7 @@ import { Skeleton } from './ui/skeleton';
 import { Input } from './ui/input';
 import { dashboardService } from '../services/dashboardService';
 import { userService } from '../services/userService';
+import { authService } from '../services/authService';
 import { apiRequest } from '../services/api';
 import { Button } from './ui/button';
 import {
@@ -347,10 +348,11 @@ function OPCOUsersList() {
   );
 }
 
-function OPCODirectory({ type, title, icon: Icon }: { type: 'stock' | 'loans' | 'list', title: string, icon: React.ElementType }) {
+function OPCODirectory({ type, title, icon: Icon }: { type: 'stock' | 'loans', title: string, icon: React.ElementType }) {
   const intl = useIntl();
   const primaryColor = usePrimaryColor();
   const { availablePartners, loadingPartners, isOPCO, isMD, selectedRegion, setSelectedRegion, availableRegions } = usePartnerContext();
+  const currentUser = authService.getCurrentUser();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const [modalOpen, setModalOpen] = useState(false);
@@ -372,8 +374,6 @@ function OPCODirectory({ type, title, icon: Icon }: { type: 'stock' | 'loans' | 
   const paginatedPartners = filteredPartners.slice((page - 1) * limit, page * limit);
 
   const handleOpenDetails = async (partner: any) => {
-    if (type === 'list') return; // Directory only for list
-
     setSelectedUser(partner);
     setModalOpen(true);
     setModalLoading(true);
@@ -386,8 +386,8 @@ function OPCODirectory({ type, title, icon: Icon }: { type: 'stock' | 'loans' | 
         // Response is the array directly from dashboardService.getLoanBalances
         setModalData(response || []);
       } else if (type === 'loans') {
-        // Fetch specific loans for this user
-        const response = await apiRequest(`/loans?partnerKey=${partner.id}&limit=1000&offset=0`);
+        // Fetch loans - get all loans and filter on modal side for this partner
+        const response = await apiRequest(`/loans?limit=1000&offset=0`);
         setModalData(response.result || []);
       }
     } catch (err) {
@@ -408,7 +408,7 @@ function OPCODirectory({ type, title, icon: Icon }: { type: 'stock' | 'loans' | 
             <div>
               <CardTitle className="text-xl font-bold uppercase tracking-tight">{title}</CardTitle>
               <p className="text-[10px] text-slate-500 mt-1 uppercase tracking-wide font-bold">
-                {type === 'list' ? intl.formatMessage({ id: 'opco.users_desc' }) : intl.formatMessage({ id: 'opco.select_partner_desc' }, { type })}
+                {intl.formatMessage({ id: 'opco.select_partner_desc' }, { type })}
               </p>
             </div>
           </div>
@@ -628,6 +628,7 @@ function OPCODirectory({ type, title, icon: Icon }: { type: 'stock' | 'loans' | 
         data={modalData}
         loading={modalLoading}
         type={type}
+        currentUserId={currentUser?.id || currentUser?.business_partner_key}
       />
       {/* FOOTER */}
       <div className="flex justify-center items-center text-[7px] font-bold text-slate-400 uppercase tracking-[0.2em] px-1 mt-auto pt-10 opacity-40">
