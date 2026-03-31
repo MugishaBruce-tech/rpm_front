@@ -339,9 +339,9 @@ export function Dashboard() {
                   <div className="p-8 rounded-xl bg-white border border-slate-200 shadow-sm">
                     <div className="flex items-center justify-between mb-6">
                       <div>
-                        <h3 className="text-lg font-black text-slate-900">{intl.formatMessage({ id: 'dashboard.all_materials' })}</h3>
-                        <p className="text-xs text-slate-500 font-medium mt-1 uppercase tracking-tighter">
-                          {intl.formatMessage({ id: 'dashboard.total_materials' })} {materialData.length}
+                        <h3 className="text-2xl font-semibold text-slate-900">{intl.formatMessage({ id: 'dashboard.all_materials' })}</h3>
+                        <p className="text-sm text-slate-500 font-normal mt-2">
+                          {intl.formatMessage({ id: 'dashboard.total_materials' })} <span className="font-semibold text-slate-700">{materialData.length}</span>
                         </p>
                       </div>
                       <div
@@ -414,21 +414,21 @@ export function Dashboard() {
                               style={{ backgroundColor: material.color || '#008200' }}
                             />
                             <div className="flex justify-between items-start relative z-20">
-                              <span className="text-[8px] font-bold text-slate-500 uppercase leading-tight tracking-tight line-clamp-1 max-w-[80%]">{material.description}</span>
+                              <span className="text-[10px] font-medium text-slate-500 leading-tight tracking-wide line-clamp-1 max-w-[80%]">{material.description}</span>
                               <span className="w-2.5 h-2.5 rounded-sm shadow-sm flex-shrink-0" style={{ backgroundColor: material.color || '#008200' }} />
                             </div>
                             <div className="mt-2 relative z-20">
                               <motion.h4
                                 variants={{ hover: { x: 2, color: material.color || '#008200' } }}
-                                className="text-[11px] font-black text-slate-700 leading-tight uppercase tracking-tight line-clamp-2 transition-colors duration-300"
+                                className="text-[12px] font-semibold text-slate-800 leading-tight uppercase tracking-wide line-clamp-2 transition-colors duration-300"
                               >
                                 {material.code}
                               </motion.h4>
                             </div>
                             <div className="mt-auto pt-3 flex items-end justify-between border-t border-slate-50 relative z-20">
                               <div className="flex items-baseline gap-1">
-                                <span className="text-2xl font-black text-slate-900 leading-none tabular-nums tracking-tighter">{material.value ?? 0}</span>
-                                <span className="text-[8px] font-extrabold text-slate-400 uppercase tracking-tighter">{intl.formatMessage({ id: 'dashboard.units' })}</span>
+                                <span className="text-3xl font-semibold text-slate-900 leading-none tabular-nums">{material.value ?? 0}</span>
+                                <span className="text-[9px] font-medium text-slate-400 uppercase tracking-wide">{intl.formatMessage({ id: 'dashboard.units' })}</span>
                               </div>
                               <motion.div
                                 variants={{ hover: { opacity: 1, x: 0, scale: 1 } }}
@@ -451,15 +451,15 @@ export function Dashboard() {
                             className="bg-gradient-to-br from-[#008200] to-green-900 border-none p-5 flex flex-col justify-between h-36 shadow-xl shadow-green-900/20"
                           >
                             <div className="relative z-20">
-                              <span className="text-[10px] font-black text-green-100 uppercase tracking-[0.15em] block">GRAND TOTAL</span>
-                              <h4 className="text-sm font-black text-white mt-1 uppercase tracking-tight">BRARUDI S.A.</h4>
+                              <span className="text-[11px] font-medium text-green-100 uppercase tracking-wide block">GRAND TOTAL</span>
+                              <h4 className="text-lg font-semibold text-white mt-1 uppercase tracking-wide">BRARUDI S.A.</h4>
                             </div>
                             <div className="mt-auto pt-3 flex items-center justify-between border-t border-green-500/30 relative z-20 gap-2">
                               <div className="flex items-baseline gap-1">
-                                <span className="text-2xl font-black text-white leading-none tabular-nums tracking-tighter drop-shadow-md">
+                                <span className="text-3xl font-semibold text-white leading-none tabular-nums">
                                   {materialData.reduce((acc, curr) => acc + (curr.value || 0), 0)}
                                 </span>
-                                <span className="text-[9px] font-extrabold text-green-100 uppercase tracking-tighter shrink-0">UNITÉS</span>
+                                <span className="text-[10px] font-medium text-green-100 uppercase tracking-wide shrink-0">UNITÉS</span>
                               </div>
                               <div className="w-8 h-8 shrink-0 rounded-lg bg-white/20 flex items-center justify-center border border-white/20">
                                 <Layers className="w-4 h-4 text-white" />
