@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useIntl } from 'react-intl';
 import { Clock, Package, ArrowRightLeft, TrendingUp, AlertCircle, ShieldCheck, Download, Activity, Star, Layers } from 'lucide-react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell } from 'recharts';
 import { motion, AnimatePresence } from 'framer-motion';
 import { StatsOverview } from './stats-overview';
 import { MaterialsInventory } from './materials-inventory';
@@ -24,6 +24,7 @@ export function Dashboard() {
   const [isSubD, setIsSubD] = useState(false);
   const [stats, setStats] = useState<any>(null);
   const [materialData, setMaterialData] = useState<any[]>([]);
+  const [loanBalances, setLoanBalances] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -56,14 +57,16 @@ export function Dashboard() {
 
         const params = { partnerKey: user.id };
 
-        const [dashboardStats, materials] = await Promise.all([
+        const [dashboardStats, materials, loans] = await Promise.all([
           dashboardService.getDashboardStats(params).catch(() => ({ physicalStockUnits: 0, totalLoanItems: 0 })),
-          dashboardService.getMaterialMetrics(params).catch(() => [])
+          dashboardService.getMaterialMetrics(params).catch(() => []),
+          dashboardService.getLoanBalances(params).catch(() => [])
         ]);
 
         if (isMounted) {
           setStats(dashboardStats);
           setMaterialData(materials);
+          setLoanBalances(loans);
           setLoading(false);
         }
       } catch (err) {
@@ -331,9 +334,9 @@ export function Dashboard() {
                 </div>
 
                 {/* Main Content Grid */}
-                <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+                <div>
                   {/* Inventory Overview */}
-                  <div className="lg:col-span-3 p-8 rounded-xl bg-white border border-slate-200 shadow-sm">
+                  <div className="p-8 rounded-xl bg-white border border-slate-200 shadow-sm">
                     <div className="flex items-center justify-between mb-6">
                       <div>
                         <h3 className="text-lg font-black text-slate-900">{intl.formatMessage({ id: 'dashboard.all_materials' })}</h3>
@@ -472,91 +475,6 @@ export function Dashboard() {
                     </div>
                   </div>
 
-                  {/* Status Card */}
-                  <div className="lg:col-span-1 p-8 rounded-2xl bg-gradient-to-br from-green-600 to-emerald-700 shadow-xl shadow-green-900/10 text-white flex flex-col justify-between relative overflow-hidden">
-                    <Star className="absolute -top-10 -right-10 w-40 h-40 text-white/10 rotate-12" />
-                    <div className="absolute -top-20 -right-20 w-40 h-40 bg-white/10 rounded-full blur-3xl" />
-                    <div className="relative z-10">
-                      <div className="flex items-center gap-2 mb-4">
-                        <ShieldCheck className="w-5 h-5 text-green-200" />
-                        <span className="text-[10px] font-black uppercase tracking-[0.2em] opacity-90">{intl.formatMessage({ id: 'dashboard.system_health' })}</span>
-                      </div>
-                      <h4 className="text-2xl font-black leading-tight">{intl.formatMessage({ id: 'dashboard.inventory_up_to_date' })}</h4>
-                      <p className="text-sm mt-4 text-green-50/90 leading-relaxed font-medium">{intl.formatMessage({ id: 'dashboard.all_stocks_synchronized' })}</p>
-                    </div>
-
-                    {/* Mini Data Flow Animation inside green card */}
-                    <div className="flex-1 flex items-center justify-center relative z-10 my-2">
-                      {(() => {
-                        const mats = materialData.slice(0, 5);
-                        const n = Math.max(mats.length, 1);
-                        const W = 300, hubX = 150, hubY = 100;
-                        const topY = 28;
-                        const nodes = mats.map((m, i) => ({
-                          x: n === 1 ? hubX : 20 + (i * (W - 40) / (n - 1)),
-                          color: m.color || '#fff',
-                          label: (m.code || '').substring(0, 3),
-                        }));
-                        return (
-                          <svg viewBox={`0 0 ${W} 175`} className="w-full" style={{ maxHeight: '160px' }}>
-                            <defs>
-                              {nodes.map((nd, i) => (
-                                <path key={i} id={`stp-${i}`}
-                                  d={`M ${nd.x} ${topY + 20} Q ${(nd.x + hubX) / 2} ${(topY + hubY) / 2} ${hubX} ${hubY - 18}`}
-                                />
-                              ))}
-                            </defs>
-                            <style>{`@keyframes sDash { to { stroke-dashoffset: -16; } }`}</style>
-
-                            {/* Lines */}
-                            {nodes.map((nd, i) => (
-                              <path key={i}
-                                d={`M ${nd.x} ${topY + 20} Q ${(nd.x + hubX) / 2} ${(topY + hubY) / 2} ${hubX} ${hubY - 18}`}
-                                stroke="rgba(255,255,255,0.25)" strokeWidth="1.2" strokeDasharray="4 4" fill="none"
-                                style={{ animation: 'sDash 1.4s linear infinite', animationDelay: `${i * -0.28}s` }}
-                              />
-                            ))}
-                            {/* Flowing dots along lines */}
-                            {nodes.map((_, i) => (
-                              <circle key={i} r="3" fill="white" opacity="0.85">
-                                <animateMotion dur="1.6s" repeatCount="indefinite" begin={`${i * 0.32}s`}>
-                                  <mpath href={`#stp-${i}`} />
-                                </animateMotion>
-                              </circle>
-                            ))}
-
-                            {/* Material nodes (top) */}
-                            {nodes.map((nd, i) => (
-                              <g key={i}>
-                                <rect x={nd.x - 18} y={topY - 20} width="36" height="40" rx="8"
-                                  fill="rgba(255,255,255,0.1)" stroke="rgba(255,255,255,0.2)" strokeWidth="1" />
-                                <circle cx={nd.x} cy={topY - 4} r="7" fill={nd.color} opacity="0.85" />
-                                <text x={nd.x} y={topY + 12} textAnchor="middle" fill="rgba(255,255,255,0.55)" fontSize="6.5" fontWeight="700">{nd.label}</text>
-                              </g>
-                            ))}
-
-                            {/* Hub */}
-                            <g>
-                              <circle cx={hubX} cy={hubY} r="24" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="1">
-                                <animate attributeName="r" values="22;30;22" dur="2.5s" repeatCount="indefinite" />
-                                <animate attributeName="opacity" values="0.3;0;0.3" dur="2.5s" repeatCount="indefinite" />
-                              </circle>
-                              <rect x={hubX - 28} y={hubY - 17} width="56" height="34" rx="9"
-                                fill="rgba(255,255,255,0.15)" stroke="rgba(255,255,255,0.2)" strokeWidth="1" />
-                              <text x={hubX} y={hubY - 2} textAnchor="middle" fill="white" fontSize="9" fontWeight="900">HUB</text>
-                              <text x={hubX} y={hubY + 10} textAnchor="middle" fill="rgba(255,255,255,0.55)" fontSize="6.5">RPM TRACKER</text>
-                            </g>
-                          </svg>
-                        );
-                      })()}
-                    </div>
-
-                    <div className="mt-4 relative z-10">
-                      <button className="w-full py-3 bg-white text-green-700 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-green-50 transition-all shadow-lg">
-                        {intl.formatMessage({ id: 'dashboard.view_detailed_report' })}
-                      </button>
-                    </div>
-                  </div>
                 </div>
 
                 {/* Additional Charts */}
@@ -565,10 +483,14 @@ export function Dashboard() {
                     {intl.formatMessage({ id: 'dashboard.stock_distribution' })}
                   </h3>
                   <div className="p-8 rounded-xl bg-white border border-slate-200 shadow-sm">
-                    {materialData.length > 0 ? (
+                    {loanBalances.length > 0 ? (
                       (() => {
-                        const totalValue = materialData.reduce((acc, curr) => acc + (curr.value || 0), 0);
-                        const chartData = [...materialData, { code: 'TOTAL', value: totalValue, isTotal: true }];
+                        const chartData = loanBalances.map(m => ({
+                          code: m.material_name2 || m.materialDescription || m.name || 'Unknown',
+                          'On Hand': m.physicalQty || 0,
+                          'Borrowed': m.borrowedQty || 0,
+                          'Lent Out': m.lentQty || 0,
+                        }));
 
                         return (
                           <>
@@ -578,18 +500,17 @@ export function Dashboard() {
                                 <XAxis dataKey="code" tick={{ fontSize: 12, fill: '#64748B' }} />
                                 <YAxis tick={{ fontSize: 12, fill: '#64748B' }} />
                                 <Tooltip contentStyle={{ backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0' }} />
-                                <Bar dataKey="value" radius={[8, 8, 0, 0]}>
-                                  {chartData.map((entry, index) => (
-                                    <Cell key={`cell-${index}`} fill={entry.isTotal ? '#0F172A' : (index % 2 === 0 ? '#008200' : '#D71921')} />
-                                  ))}
-                                </Bar>
+                                <Legend />
+                                <Bar dataKey="On Hand" fill="#008200" radius={[8, 8, 0, 0]} />
+                                <Bar dataKey="Borrowed" fill="#D71921" radius={[8, 8, 0, 0]} />
+                                <Bar dataKey="Lent Out" fill="#0284c7" radius={[8, 8, 0, 0]} />
                               </BarChart>
                             </ResponsiveContainer>
                             {/* Total shown at the downside of the chart */}
                             <div className="mt-6 pt-4 border-t border-slate-100 flex justify-end items-center">
                               <span className="text-[10px] font-black text-slate-400 mr-3 uppercase tracking-widest">TOTAL INVENTORY:</span>
                               <span className="text-2xl font-black text-slate-800 tabular-nums">
-                                {totalValue} <span className="text-sm text-slate-400 ml-1">UNITÉS</span>
+                                {loanBalances.reduce((acc, curr) => acc + (curr.physicalQty || 0), 0)} <span className="text-sm text-slate-400 ml-1">UNITÉS</span>
                               </span>
                             </div>
                           </>
